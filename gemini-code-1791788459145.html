@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 3D Universe Proof</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #050505;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    #ui-container {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(15, 15, 20, 0.85);
+      padding: 25px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      width: 90%;
+      max-width: 650px;
+    }
+    #subtitle {
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 20px;
+      min-height: 55px;
+      line-height: 1.5;
+      color: #e0e0e0;
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    button:hover { background: rgba(255, 255, 255, 0.2); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    #btn-x { border-color: #ff3366; color: #ff3366; }
+    #btn-y { border-color: #33cc66; color: #33cc66; }
+    #btn-z { border-color: #3399ff; color: #3399ff; }
+    #btn-4th {
+      background: linear-gradient(45deg, #ff9900, #ff3300);
+      border: none;
+      color: white;
+      box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+      animation: pulse 2s infinite;
+      display: none;
+    }
+    #btn-4th:hover {
+      background: linear-gradient(45deg, #ffaa33, #ff5533);
+      box-shadow: 0 0 25px rgba(255, 102, 0, 0.8);
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    #error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(220, 38, 38, 0.95);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-align: center;
+      z-index: 20;
+      display: none;
+      box-shadow: 0 0 50px rgba(220, 38, 38, 0.6);
+      border: 2px solid white;
+      line-height: 1.6;
+    }
+    #instruction {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .arc-label {
+      position: absolute;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      text-shadow: 0 0 5px black;
+      pointer-events: none;
+      background: rgba(0,0,0,0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <div id="instruction">মাউস দিয়ে টেনে (drag) বা জুম করে ৩৬০° দেখতে পারেন</div>
+
+  <div id="canvas-container"></div>
+
+  <div id="error-message">
+    ERROR: স্পেস ফুল! 🚫<br>
+    আমাদের জগতে ৪র্থ এমন কোনো রেখা আঁকা সম্ভব নয় যা বাকি তিনটির সাথে ঠিক ৯০ ডিগ্রিতে থাকবে।<br><br>
+    গাণিতিকভাবে প্রমাণিত, আমরা থ্রি-ডি জগতেই বাস করি!
+  </div>
+
+  <div id="ui-container">
+    <div id="subtitle">এটি শূন্যস্থান (0D)। এখানে শুধু একটি বিন্দু আছে। নিচের বাটনগুলোতে ক্লিক করে ধাপে ধাপে ডাইমেনশন তৈরি করুন।</div>
+    <div class="button-group">
+      <button id="btn-x">১ম রেখা (X)</button>
+      <button id="btn-y" disabled>২য় রেখা (Y)</button>
+      <button id="btn-z" disabled>৩য় রেখা (Z)</button>
+      <button id="btn-4th">চ্যালেঞ্জ: ৪র্থ রেখা টানুন!</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // --- Scene Setup ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050505, 0.02);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(12, 10, 18);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+
+    // --- Objects ---
+    const originMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const originGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+    const originPoint = new THREE.Mesh(originGeometry, originMaterial);
+    scene.add(originPoint);
+
+    // Grid (Subtle Background)
+    const gridHelper = new THREE.GridHelper(30, 30, 0x333333, 0x111111);
+    gridHelper.position.y = -8;
+    scene.add(gridHelper);
+
+    // Materials for lines
+    const materialX = new THREE.LineBasicMaterial({ color: 0xff3366, linewidth: 5 }); // Red
+    const materialY = new THREE.LineBasicMaterial({ color: 0x33cc66, linewidth: 5 }); // Green
+    const materialZ = new THREE.LineBasicMaterial({ color: 0x3399ff, linewidth: 5 }); // Blue
+    const material4th = new THREE.LineBasicMaterial({ color: 0xffaa00, linewidth: 5 }); // Yellow
+
+    // Helper to create a line
+    function createLine(colorMat, dirVector, length = 10) {
+      const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, colorMat);
+      line.userData = { 
+        targetEnd: dirVector.clone().multiplyScalar(length),
+        progress: 0 
+      };
+      return line;
+    }
+
+    // Helper to create a 90-degree arc
+    function createArc(axis, color = 0xffff00) {
+      const curve = new THREE.EllipseCurve(0, 0, 2, 2, 0, Math.PI / 2, false, 0);
+      const points = curve.getPoints(50);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.7 });
+      const arc = new THREE.Line(geometry, material);
+      
+      if (axis === 'xz') arc.rotation.x = Math.PI / 2;
+      else if (axis === 'yz') {
+        arc.rotation.y = -Math.PI / 2;
+        arc.rotation.z = Math.PI / 2;
+      }
+      arc.visible = false;
+      return arc;
+    }
+
+    // Initialize lines
+    const lineX = createLine(materialX, new THREE.Vector3(1, 0, 0));
+    const lineY = createLine(materialY, new THREE.Vector3(0, 1, 0));
+    const lineZ = createLine(materialZ, new THREE.Vector3(0, 0, 1));
+    const line4th = createLine(material4th, new THREE.Vector3(1, 1, 1).normalize());
+
+    scene.add(lineX); scene.add(lineY); scene.add(lineZ); scene.add(line4th);
+
+    // Initialize Arcs
+    const arcXY = createArc('xy');
+    const arcXZ = createArc('xz');
+    const arcYZ = createArc('yz');
+    scene.add(arcXY); scene.add(arcXZ); scene.add(arcYZ);
+
+    // HTML Labels for Arcs
+    const createHtmlLabel = (text) => {
+      const div = document.createElement('div');
+      div.className = 'arc-label';
+      div.textContent = text;
+      div.style.display = 'none';
+      document.body.appendChild(div);
+      return div;
+    };
+    
+    const labelXY = createHtmlLabel('90°');
+    const labelXZ = createHtmlLabel('90°');
+    const labelYZ = createHtmlLabel('90°');
+
+    function updateLabels() {
+      const offset = 2.5; 
+      const positions = [
+        { v: new THREE.Vector3(offset * Math.cos(Math.PI/4), offset * Math.sin(Math.PI/4), 0), el: labelXY },
+        { v: new THREE.Vector3(offset * Math.cos(Math.PI/4), 0, offset * Math.sin(Math.PI/4)), el: labelXZ },
+        { v: new THREE.Vector3(0, offset * Math.cos(Math.PI/4), offset * Math.sin(Math.PI/4)), el: labelYZ }
+      ];
+
+      positions.forEach(item => {
+        item.v.project(camera);
+        const x = (item.v.x * .5 + .5) * window.innerWidth;
+        const y = (item.v.y * -.5 + .5) * window.innerHeight;
+        item.el.style.left = `${x}px`;
+        item.el.style.top = `${y}px`;
+      });
+    }
+
+    // --- Interaction Logic ---
+    const btnX = document.getElementById('btn-x');
+    const btnY = document.getElementById('btn-y');
+    const btnZ = document.getElementById('btn-z');
+    const btn4th = document.getElementById('btn-4th');
+    const subtitle = document.getElementById('subtitle');
+    const errorMsg = document.getElementById('error-message');
+
+    let state = 0;
+
+    function animateLine(line, onComplete) {
+      const animateStep = () => {
+        if (line.userData.progress < 1) {
+          line.userData.progress += 0.04;
+          if (line.userData.progress > 1) line.userData.progress = 1;
+          
+          const positions = line.geometry.attributes.position.array;
+          const currentEnd = line.userData.targetEnd.clone().multiplyScalar(line.userData.progress);
+          
+          positions[3] = currentEnd.x; positions[4] = currentEnd.y; positions[5] = currentEnd.z;
+          line.geometry.attributes.position.needsUpdate = true;
+          requestAnimationFrame(animateStep);
+        } else if (onComplete) onComplete();
+      };
+      animateStep();
+    }
+
+    btnX.addEventListener('click', () => {
+      btnX.disabled = true;
+      subtitle.innerHTML = "<b>১ম ডাইমেনশন (দৈর্ঘ্য):</b> এটি একমাত্রিক জগত। আপনি শুধু সামনে-পেছনে (X-axis) যেতে পারবেন।";
+      animateLine(lineX, () => { btnY.disabled = false; });
+      state = 1;
+    });
+
+    btnY.addEventListener('click', () => {
+      btnY.disabled = true;
+      subtitle.innerHTML = "<b>২য় ডাইমেনশন (প্রস্থ):</b> এটি দ্বিমাত্রিক জগত (যেমন কাগজ)। ১ম রেখার সাথে এটি ঠিক <b>৯০° কোণে</b> আছে।";
+      animateLine(lineY, () => {
+        arcXY.visible = true; labelXY.style.display = 'block';
+        btnZ.disabled = false;
+      });
+      state = 2;
+    });
+
+    btnZ.addEventListener('click', () => {
+      btnZ.disabled = true;
+      controls.autoRotate = false; // Stop auto rotate to focus on Z
+      subtitle.innerHTML = "<b>৩য় ডাইমেনশন (গভীরতা):</b> এটি আমাদের থ্রি-ডি জগত! ৩য় রেখাটি আগের ২টির সাথেই <b>৯০° কোণে</b> আছে।";
+      
+      animateLine(lineZ, () => {
+        arcXZ.visible = true; arcYZ.visible = true;
+        labelXZ.style.display = 'block'; labelYZ.style.display = 'block';
+        btn4th.style.display = 'block';
+      });
+      state = 3;
+    });
+
+    // The 4th Dimension Glitch
+    btn4th.addEventListener('click', () => {
+      btn4th.disabled = true;
+      subtitle.innerHTML = "চেষ্টা করা হচ্ছে ৪র্থ রেখা আঁকার, যা X, Y এবং Z তিনটির সাথেই ৯০° কোণে থাকবে...";
+      
+      let glitchTimer = 0;
+      const glitchInterval = setInterval(() => {
+        glitchTimer += 0.1;
+        
+        // Randomly point it somewhere trying to find 90 degrees
+        const randomDir = new THREE.Vector3(
+          Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5
+        ).normalize().multiplyScalar(10);
+
+        const positions = line4th.geometry.attributes.position.array;
+        positions[3] = randomDir.x; positions[4] = randomDir.y; positions[5] = randomDir.z;
+        line4th.geometry.attributes.position.needsUpdate = true;
+        line4th.material.color.setHex(Math.random() > 0.5 ? 0xff0000 : 0xffaa00);
+
+        // Fail and show error
+        if (glitchTimer > 3.5) {
+          clearInterval(glitchInterval);
+          line4th.visible = false;
+          errorMsg.style.display = 'block';
+          subtitle.style.display = 'none';
+          btn4th.style.display = 'none';
+        }
+      }, 50);
+    });
+
+    // --- Render Loop ---
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      if(state >= 2) updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+  </script>
+</body>
+</html>
