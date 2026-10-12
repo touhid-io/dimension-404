@@ -22,3 +22,15 @@ This project transforms a simple geometric concept into an IMAX-style sci-fi exp
 
 ---
 *Built to explore the boundaries of web-based spatial storytelling.*
+
+## Run and build
+
+The checked-in `assets/simulation.js` bundle includes Three.js, its effects and GSAP. The simulation has no runtime JavaScript CDN dependency and can be hosted as a static site.
+
+```sh
+npm ci
+npm run build
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000`, wait for Ready, then click **Initialize Simulation**. Audio starts on this click and remains optional if the browser cannot enable audio. **Replay Simulation** appears after the terminal sequence. For source changes, edit `src/simulation.js` and rebuild the checked-in bundle.

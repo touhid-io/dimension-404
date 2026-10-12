@@ -10,8 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
   
-  <!-- GSAP for Motion Physics -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
 
   <style>
     body {
@@ -68,16 +67,22 @@
     .sys-error { color: #f87171; text-shadow: 0 0 10px #f87171; font-weight: bold; }
     .sys-highlight { color: #fbbf24; }
 
+
+    #start-screen { padding: 24px; box-sizing: border-box; text-align: center; }
+    #start-btn:disabled { cursor: wait; opacity: 0.55; }
+    #startup-status { margin-top: 20px; max-width: 560px; font-size: 0.95rem; line-height: 1.6; color: #999; }
+    #retry-btn, .replay-btn { margin-top: 24px; padding: 12px 24px; background: #111; border: 1px solid #4ade80; color: #4ade80; cursor: pointer; font: inherit; }
+    #terminal-screen { overflow-y: auto; }
+    @media (max-width: 600px) {
+      #start-screen h2 { font-size: 1.8rem; letter-spacing: 5px; }
+      #start-screen p { letter-spacing: 2px; line-height: 1.8; margin-bottom: 28px; }
+      #start-btn { padding: 15px 20px; font-size: 0.9rem; letter-spacing: 2px; }
+      #subtitle-text { font-size: 1.35rem; letter-spacing: 0; }
+      #terminal-screen { font-size: 0.95rem; }
+    }
   </style>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
+
 </head>
 <body>
 
@@ -88,307 +93,56 @@
   <div id="start-screen">
     <h2>Spatial Reality</h2>
     <p>A Cinematic Geometric Proof // Wear Headphones</p>
-    <button id="start-btn">Initialize Simulation</button>
+    <button id="start-btn" disabled>Loading Simulation…</button>
+    <div id="startup-status" role="status" aria-live="polite">Preparing the 3D engine…</div>
+    <button id="retry-btn" hidden>Retry</button>
   </div>
 
   <div id="subtitle-container"><div id="subtitle-text"></div></div>
   <div id="terminal-screen"></div>
   <div id="canvas-container"></div>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-    import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
-
-    // ==========================================
-    // 1. 3D SPATIAL AUDIO SYSTEM
-    // ==========================================
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const listener = new THREE.AudioListener();
-    
-    function create3DSound(freq, type = 'sine', isPanner = false) {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type; osc.frequency.value = freq;
-      osc.start();
-      
-      if (isPanner) {
-        const panner = audioCtx.createPanner();
-        panner.panningModel = 'HRTF';
-        panner.distanceModel = 'inverse';
-        panner.refDistance = 1;
-        panner.maxDistance = 100;
-        osc.connect(gain); gain.connect(panner); panner.connect(audioCtx.destination);
-        return { osc, gain, panner };
-      } else {
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        return { osc, gain };
+  <script>
+    (() => {
+      const screen = document.getElementById('start-screen');
+      const button = document.getElementById('start-btn');
+      const status = document.getElementById('startup-status');
+      const retry = document.getElementById('retry-btn');
+      let booted = false;
+      const watchdog = setTimeout(() => {
+        if (!booted) failed(new Error('The 3D engine took too long to load. Please retry.'));
+      }, 20000);
+      function failed(error) {
+        clearTimeout(watchdog);
+        console.error('Simulation failed:', error);
+        screen.style.display = 'flex';
+        screen.style.opacity = '1';
+        document.getElementById('terminal-screen').style.display = 'none';
+        button.disabled = true;
+        button.textContent = 'Simulation Unavailable';
+        status.textContent = /webgl|graphics/i.test(String(error && error.message))
+          ? '3D graphics are unavailable. Enable hardware acceleration or try another browser, then retry.'
+          : 'The simulation could not start. Please reload and try again.';
+        status.style.color = '#f87171';
+        retry.hidden = false;
       }
-    }
-
-    let ambientDrone = null;
-    function startDrone() {
-      ambientDrone = create3DSound(45, 'sine');
-      ambientDrone.gain.setValueAtTime(0, audioCtx.currentTime);
-      ambientDrone.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 3);
-    }
-
-    function playGlitchTension(intensity, posX, posY, posZ) {
-      const s = create3DSound(100 + Math.random() * 400 * intensity, 'sawtooth', true);
-      s.panner.positionX.value = posX; s.panner.positionY.value = posY; s.panner.positionZ.value = posZ;
-      s.gain.setValueAtTime(0.05 * intensity, audioCtx.currentTime);
-      s.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-      setTimeout(() => s.osc.stop(), 100);
-    }
-
-    function playCinematicBoom() {
-      const bufferSize = audioCtx.sampleRate * 3;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 2);
-      const gain = audioCtx.createGain(); gain.gain.setValueAtTime(1.5, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
-      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-      noise.start();
-    }
-
-    // ==========================================
-    // 2. SCENE, VFX & SHADERS
-    // ==========================================
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x010103, 0.012);
-    
-    // Parallax Camera Group
-    const cameraGroup = new THREE.Group();
-    scene.add(cameraGroup);
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(2, 1, 3);
-    camera.add(listener);
-    cameraGroup.add(camera);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
-    container.appendChild(renderer.domElement);
-
-    // Custom RGB Glitch Shader (Chromatic Aberration)
-    const RGBShiftShader = {
-      uniforms: { tDiffuse: { value: null }, amount: { value: 0.0 }, angle: { value: 0.0 } },
-      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform sampler2D tDiffuse; uniform float amount; uniform float angle; varying vec2 vUv;
-        void main() {
-          vec2 offset = amount * vec2(cos(angle), sin(angle));
-          vec4 cr = texture2D(tDiffuse, vUv + offset);
-          vec4 cga = texture2D(tDiffuse, vUv);
-          vec4 cb = texture2D(tDiffuse, vUv - offset);
-          gl_FragColor = vec4(cr.r, cga.g, cb.b, cga.a);
+      window.simulationUI = {
+        failed,
+        ready() {
+          booted = true;
+          clearTimeout(watchdog);
+          button.disabled = false;
+          button.textContent = 'Initialize Simulation';
+          status.textContent = 'Ready — click to begin. Headphones recommended.';
+          status.style.color = '#999';
+          retry.hidden = true;
         }
-      `
-    };
-
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.2, 0.6, 0.1));
-    const filmPass = new FilmPass(0.35, 0.025, 648, false); // Cinematic Grain
-    composer.addPass(filmPass);
-    const glitchPass = new ShaderPass(RGBShiftShader);
-    composer.addPass(glitchPass);
-
-    // Geometry
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffffff })));
-    const particles = new THREE.Points(
-      new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(3000).map(()=> (Math.random()-0.5)*80), 3)),
-      new THREE.PointsMaterial({ size: 0.04, color: 0x666688, transparent: true, opacity: 0.3 })
-    );
-    scene.add(particles);
-
-    function createLaser(colorHex) {
-      const mesh = new THREE.Mesh(
-        new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)), 20, 0.03, 8, false),
-        new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0 })
-      );
-      scene.add(mesh); return mesh;
-    }
-
-    const vecX = new THREE.Vector3(1, 0, 0); const vecY = new THREE.Vector3(0, 1, 0); const vecZ = new THREE.Vector3(0, 0, 1);
-    const lineX = createLaser(0xff2255); const lineY = createLaser(0x22ff66); const lineZ = createLaser(0x2288ff); 
-    let line4th = createLaser(0xffaa00);
-
-    // ==========================================
-    // 3. KINETIC TYPOGRAPHY & GSAP MOTION
-    // ==========================================
-    const subContainer = document.getElementById('subtitle-text');
-    function typeKineticText(text, duration = 1) {
-      subContainer.innerHTML = text.split('').map(c => c===' ' ? '&nbsp;' : `<span class="char">${c}</span>`).join('');
-      gsap.to(".char", { y: 0, opacity: 1, stagger: 0.03, ease: "back.out(1.7)", duration: 0.5 });
-    }
-
-    function spawnLineCinematic(mesh, dirVec, targetLen = 15) {
-      mesh.material.opacity = 1;
-      let obj = { p: 0 };
-      gsap.to(obj, {
-        p: 1, duration: 2.5, ease: "power4.out",
-        onUpdate: () => {
-          mesh.geometry.dispose();
-          mesh.geometry = new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0,0,0), dirVec.clone().multiplyScalar(targetLen * obj.p)), 20, 0.03, 8, false);
-        }
-      });
-    }
-
-    // Mouse Parallax Effect
-    let mouseX = 0, mouseY = 0;
-    window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-    });
-
-    // ==========================================
-    // 4. THE MASTER SEQUENCE
-    // ==========================================
-    async function playDirectorCut() {
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      startDrone();
-      
-      gsap.to("#start-screen", { opacity: 0, duration: 1.5, onComplete: () => document.getElementById('start-screen').style.display='none' });
-      
-      await new Promise(r => setTimeout(r, 2000));
-      typeKineticText("কল্পনা করুন, শূন্য মহাকাশে শুধু একটি বিন্দু...");
-      gsap.to(camera.position, { x: 3, y: 1.5, z: 4, duration: 5, ease: "sine.inOut" });
-      await new Promise(r => setTimeout(r, 4500));
-      
-      typeKineticText("এখান থেকে আমরা প্রথম রেখাটি টানলাম। (1D)");
-      spawnLineCinematic(lineX, vecX);
-      gsap.to(camera.position, { x: 6, y: 2.5, z: 7, duration: 4, ease: "power2.out" });
-      await new Promise(r => setTimeout(r, 4500));
-      
-      typeKineticText("১ম রেখার সাথে ঠিক ৯০° কোণে ২য় রেখা। (2D)");
-      spawnLineCinematic(lineY, vecY);
-      gsap.to(camera.position, { x: 10, y: 6, z: 10, duration: 5, ease: "power3.inOut" });
-      await new Promise(r => setTimeout(r, 5000));
-      
-      typeKineticText("আগের দুটির সাথেই ৯০° কোণে ৩য় রেখাটি। (3D)");
-      spawnLineCinematic(lineZ, vecZ);
-      gsap.to(camera.position, { x: -14, y: 10, z: 14, duration: 7, ease: "expo.out" });
-      await new Promise(r => setTimeout(r, 7000));
-      
-      // --- THE CLIMAX: 4TH DIMENSION ---
-      typeKineticText("চলুন ৪র্থ রেখা আঁকার চেষ্টা করি, যা ৩টির সাথেই ৯০° কোণে থাকবে...");
-      document.body.classList.add('immersive'); // Retract cinema bars
-      
-      gsap.to(camera.position, { x: 8, y: 6, z: 8, duration: 3, ease: "power1.inOut" });
-      await new Promise(r => setTimeout(r, 3000));
-      
-      line4th.material.opacity = 1;
-      let struggleObj = { val: 0 };
-      let vec4 = new THREE.Vector3(1,1,1).normalize();
-      
-      gsap.to(subContainer, { opacity: 0, duration: 1 });
-
-      // Chaotic Physics & Glitch Simulation
-      const glitchAnim = gsap.to(struggleObj, {
-        val: 10, duration: 7, ease: "power2.in",
-        onUpdate: () => {
-          let t = struggleObj.val;
-          // RGB Shader glitch based on intensity
-          glitchPass.uniforms.amount.value = t * 0.002;
-          glitchPass.uniforms.angle.value = Math.random() * Math.PI * 2;
-          
-          // Camera Shake (Perlin Noise Simulation)
-          cameraGroup.position.x = Math.sin(t * 10) * t * 0.05;
-          cameraGroup.position.y = Math.cos(t * 12) * t * 0.05;
-
-          // Chaotic Line rotation
-          vec4.add(new THREE.Vector3(Math.sin(t), Math.cos(t*1.5), Math.sin(t*0.7))).normalize();
-          line4th.geometry.dispose();
-          line4th.geometry = new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0,0,0), vec4.clone().multiplyScalar(15)), 20, 0.04 + (t*0.01), 8, false);
-          
-          // Spatial audio pulse
-          if(Math.random() > 0.6) playGlitchTension(t/10, vec4.x*10, vec4.y*10, vec4.z*10);
-          
-          if(t > 5) line4th.material.color.setHex(Math.random() > 0.5 ? 0xff0000 : 0xffaa00);
-        },
-        onComplete: triggerSystemCrash
-      });
-    }
-
-    function triggerSystemCrash() {
-      playCinematicBoom();
-      ambientDrone.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-      
-      // Flash Bang
-      const flash = document.createElement('div');
-      flash.style.cssText = "position:absolute;top:0;left:0;width:100vw;height:100vh;background:#fff;z-index:999;transition:opacity 2s ease-out;";
-      document.body.appendChild(flash);
-      
-      document.getElementById('canvas-container').style.display = 'none';
-      
-      setTimeout(() => { flash.style.opacity = '0'; }, 50);
-      
-      // Terminal Sequence
-      setTimeout(runTerminalReboot, 2000);
-    }
-
-    function runTerminalReboot() {
-      const term = document.getElementById('terminal-screen');
-      term.style.display = 'block';
-      const lines = [
-        { t: "CRITICAL: SPATIAL GEOMETRY OVERLOAD. DIMENSION 4 (90°) CANNOT BE RENDERED.", c: "sys-error" },
-        { t: "INITIATING SYSTEM DIAGNOSTICS...", c: "" },
-        { t: "> EINSTEIN'S RELATIVITY METRIC: The 4th dimension is TIME, not space. It flows, it cannot be drawn.", c: "sys-highlight" },
-        { t: "> GRAVITATIONAL STABILITY METRIC: In a 4D spatial universe, orbits decay. Life cannot exist.", c: "sys-highlight" },
-        { t: "REBOOTING UNIVERSE IN STABLE 3D CONFIGURATION.", c: "" },
-        { t: "STATUS: REALITY RESTORED.", c: "sys-error" }
-      ];
-      
-      let delay = 0;
-      lines.forEach((line, i) => {
-        setTimeout(() => {
-          const el = document.createElement('div');
-          el.className = `term-line ${line.c}`;
-          el.innerHTML = line.t;
-          term.appendChild(el);
-          gsap.to(el, { x: 0, opacity: 1, duration: 0.5, ease: "power2.out" });
-          
-          // Typing beep
-          const b = create3DSound(2000 + (i*100), 'square');
-          b.gain.setValueAtTime(0.02, audioCtx.currentTime); b.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-          setTimeout(() => b.osc.stop(), 150);
-        }, delay);
-        delay += 1200 + Math.random()*800;
-      });
-    }
-
-    document.getElementById('start-btn').addEventListener('click', playDirectorCut);
-
-    // Render Loop
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
-      
-      // Gentle Parallax
-      cameraGroup.rotation.y += (mouseX * 0.1 - cameraGroup.rotation.y) * 0.05;
-      cameraGroup.rotation.x += (mouseY * 0.1 - cameraGroup.rotation.x) * 0.05;
-      
-      particles.rotation.y += 0.001;
-      camera.lookAt(0,0,0);
-      composer.render();
-    }
-    
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
-    });
-    animate();
+      };
+      retry.addEventListener('click', () => window.location.reload());
+      window.addEventListener('error', event => { if (event.error) failed(event.error); });
+      window.addEventListener('unhandledrejection', event => failed(event.reason));
+      import('./assets/simulation.js').then(module => module.initializeSimulation()).catch(failed);
+    })();
   </script>
 </body>
 </html>
