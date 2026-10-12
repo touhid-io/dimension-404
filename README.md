@@ -1,36 +1,29 @@
-# 🌌 Spatial Reality // The 3D Proof
+# Spatial Reality — A guided lesson in dimensions
 
-A highly cinematic, interactive 3D visualization that mathematically and visually proves why a 4th spatial dimension (at a 90-degree angle to X, Y, and Z) is impossible in our physical universe. 
+A cinematic, Bengali explanation of coordinates and dimensions for secondary-school learners. The lesson shows a point, a line, a plane and a cube; labels X/Y/Z; marks right angles; and measures the angles between a candidate fourth direction and the three existing axes.
 
-This project transforms a simple geometric concept into an IMAX-style sci-fi experience using cutting-edge web technologies.
+The learner can pause, go back, advance manually, mute audio and replay. Autoplay leaves each explanation visible for reading. Camera transitions and ambient motion respect reduced-motion preferences.
 
-## ✨ Features
-- **Cinematic Auto-Sequencer:** A zero-interaction, movie-like automated camera and storytelling flow.
-- **Motion Physics:** Smooth, weight-driven camera movements powered by GSAP.
-- **Custom VFX Shaders:** Features realistic Chromatic Aberration (RGB split) and Film Grain for that deep-space cinematic look.
-- **Spatial 3D Audio:** Uses Web Audio API with `PannerNode` for HRTF spatial sound (sounds move between your left and right headphones).
-- **Terminal Reboot Sequence:** A system-crash climax followed by a hacker-style terminal log explaining the actual physics (Einstein's Relativity & Gravity).
+## What the lesson demonstrates
 
-## 🛠 Tech Stack
-- **Three.js** (WebGL 3D Rendering & Post-processing)
-- **GSAP** (Advanced Animation & Easing)
-- **Web Audio API** (Real-time sound synthesis)
-- **HTML5 & CSS3** (Kinetic typography and UI)
+Within Euclidean 3D space, a vector perpendicular to all three standard basis vectors must have all three components zero. The zero vector has no direction and cannot be a new axis. Rotating a candidate line illustrates the problem; the component argument explains it.
 
-## 🚀 Live Demo
-[Watch the Cinematic Experience Here](https://your-project-name.vercel.app) *(Headphones highly recommended)*
-
----
-*Built to explore the boundaries of web-based spatial storytelling.*
+This does **not** prove that additional spatial dimensions are physically impossible. Four-dimensional mathematical spaces are valid constructions. The separate spacetime section describes an event using three spatial coordinates and one time coordinate; it does not treat time as an extra ordinary spatial arrow. The old claims about gravity, life and universal impossibility have been removed.
 
 ## Run and build
-
-The checked-in `assets/simulation.js` bundle includes Three.js, its effects and GSAP. The simulation has no runtime JavaScript CDN dependency and can be hosted as a static site.
 
 ```sh
 npm ci
 npm run build
-python3 -m http.server 8000
+python3 -m http.server 8000 --directory dist
 ```
 
-Open `http://localhost:8000`, wait for Ready, then click **Initialize Simulation**. Audio starts on this click and remains optional if the browser cannot enable audio. **Replay Simulation** appears after the terminal sequence. For source changes, edit `src/simulation.js` and rebuild the checked-in bundle.
+Open `http://localhost:8000`, wait for readiness, then click **শেখা শুরু করো**. Edit `src/simulation.js` for lesson content and scenes, and rebuild the checked-in `assets/simulation.js` bundle. Vercel builds and serves `dist/` using `vercel.json`.
+
+Three.js and GSAP are bundled locally. Bengali and Latin Tiro Bangla WOFF2 fonts are hosted locally with their SIL Open Font License in `assets/fonts/OFL.txt`; no JavaScript or font CDN is needed during playback. Audio is optional and created only after the start click.
+
+## Educational references
+
+- [MIT Linear Algebra notes](https://web.mit.edu/~linalg/webpage/Spring21/Lecture%20notes.pdf): independence, dimensions, orthogonality and dot products.
+- [Einstein Online — Spacetime](https://www.einstein-online.info/en/explandict/spacetime/): spatial coordinates and time coordinates.
+- [Einstein Online — Extra dimensions](https://www.einstein-online.info/en/spotlight/hiding_extra_dimensions/): the distinction between everyday space and possible additional dimensions.
