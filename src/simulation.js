@@ -5,332 +5,360 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { FilmPass } from 'three/addons/postprocessing/FilmPass.js';
 
-// Durations leave the complete explanation visible before advancing.
-export const LESSON_STEPS = [
-  { title: 'মাত্রা মানে কী?', duration: 11, shape: 'point',
-    text: 'একটি অবস্থান ঠিক করে বলতে কয়টি স্বাধীন সংখ্যা লাগে? সেই সংখ্যাই ওই স্থানের মাত্রা। শুধু একটি বিন্দুতে চলার কোনো স্বাধীন দিক নেই।',
-    formula: 'বিন্দু → ০টি স্বাধীন দিক → 0D',
-    note: '“স্বাধীন” মানে: অন্য দিকগুলো মিলিয়ে যে দিকটি বানানো যায় না।' },
-  { title: '১D — একটি সংখ্যা যথেষ্ট', duration: 12, shape: 'line',
-    text: 'সোজা পথে কোথায় আছো? শুরুর জায়গা থেকে কত দূরে, শুধু সেটি বললেই হয়। লাল রেখায় P-এর অবস্থান জানাতে x = 3 যথেষ্ট।',
-    formula: 'P = (3) · একটি স্থানাঙ্ক: x',
-    note: 'একই রেখায় সামনে ও পেছনে চলা দুটি স্বাধীন মাত্রা নয়।' },
-  { title: '২D — দৈর্ঘ্য ও প্রস্থ', duration: 14, shape: 'plane',
-    text: 'কাগজের ওপর একটি বিন্দু খুঁজতে ডানে কত দূর এবং ওপরে কত দূর—দুটিই জানতে হয়। X ও Y মিলে পুরো সমতলটি তৈরি করে।',
-    formula: 'P = (3, 2) · দুটি স্থানাঙ্ক: x, y',
-    note: 'এখানে X ⟂ Y। কোণের ছোট বর্গটি ৯০° বোঝায়।' },
-  { title: '৩D — এবার উচ্চতাও দরকার', duration: 15, shape: 'cube',
-    text: 'ঘরের মধ্যে একটি অবস্থান বলতে দৈর্ঘ্য, প্রস্থ ও উচ্চতা লাগে। ঘনকের P বিন্দুটি খুঁজতে এবার তিনটি সংখ্যা প্রয়োজন।',
-    formula: 'P = (3, 2, 2) · তিনটি স্থানাঙ্ক: x, y, z',
-    note: 'চিত্রে X = দৈর্ঘ্য, Y = প্রস্থ, Z = উচ্চতা। অক্ষের নাম বদলালেও মাত্রা বদলায় না।' },
-  { title: 'তিনটি অক্ষই পরস্পর লম্ব', duration: 12, shape: 'angles',
-    text: 'X–Y, Y–Z এবং Z–X: প্রতিটি জোড়ার আসল কোণ ৯০°। তিনটি স্বাধীন দিক মিলে আমাদের এই 3D স্থান তৈরি করেছে।',
-    formula: '∠(X, Y) = ∠(Y, Z) = ∠(Z, X) = 90°',
-    note: 'স্ক্রিনে দৃশ্যটি একটি 2D প্রক্ষেপণ। তাই চোখে কোণ আলাদা লাগতে পারে; পাশের মানগুলো 3D কোণ।' },
-  { title: 'চতুর্থ স্বাধীন দিক খুঁজি', duration: 16, shape: 'candidate',
-    text: 'হলুদ রেখা W-কে ঘুরিয়ে দেখি। একটি কোণ ৯০°-এর কাছাকাছি হলেও অন্য কোণগুলো বদলায়। তিনটির সঙ্গেই একসঙ্গে লম্ব হচ্ছে কি?',
-    formula: 'লক্ষ্য: ∠(W, X) = ∠(W, Y) = ∠(W, Z) = 90°',
-    note: 'এটি উদাহরণ দেখানোর চেষ্টা। শুধু ঘোরানো বা অ্যানিমেশন দিয়ে অসম্ভবের প্রমাণ হয় না।' },
-  { title: 'X ও Y-এর সঙ্গে লম্ব করলে…', duration: 13, shape: 'overlap',
-    text: 'W-কে X ও Y দুটির সঙ্গেই লম্ব করলাম। এবার সেটি Z-এর দিকেই চলে এসেছে। হলুদ ও নীল একই দিকে—একটি নতুন স্বাধীন অক্ষ হলো না।',
-    formula: 'W = (0, 0, 1) → X: 90° · Y: 90° · Z: 0°',
-    note: 'উল্টো দিকে নিলেও সেটি একই Z অক্ষ: Z-এর সঙ্গে তখন ১৮০°, ৯০° নয়।' },
-  { title: 'কেন সম্ভব নয়? ছোট্ট গণিত', duration: 20, shape: 'proof',
-    text: '3D-তে নতুন দিকের ভেক্টর ধরি W = (a, b, c)। লম্ব দুটি ভেক্টরের ডট প্রোডাক্ট শূন্য। তাই তিনটি শর্ত একসঙ্গে দিলে:',
-    formula: 'X-এর সঙ্গে লম্ব → a = 0\nY-এর সঙ্গে লম্ব → b = 0\nZ-এর সঙ্গে লম্ব → c = 0\nতাই W = (0, 0, 0)',
-    note: 'শূন্য ভেক্টরের দৈর্ঘ্য ০; কোনো দিক নেই। ফলে সেটি চতুর্থ অক্ষ হতে পারে না। এই যুক্তি এই 3D স্থানের জন্য।' },
-  { title: 'তাহলে ৪D গণিত কি অসম্ভব?', duration: 15, shape: 'four',
-    text: 'না। চার মাত্রার গণিতে চারটি স্বাধীন স্থানাঙ্ক ব্যবহার করা যায়: x, y, z, w। সেখানে চতুর্থ অক্ষের জন্য আলাদা স্থানাঙ্ক রয়েছে।',
-    formula: '4D: (x, y, z, w) · চতুর্থ একক অক্ষ: (0, 0, 0, 1)',
-    note: 'এই 3D দৃশ্যে অতিরিক্ত স্বাধীন অক্ষ দেখাতে না পারা দিয়ে বাস্তব মহাবিশ্বে অতিরিক্ত মাত্রা আছে কি না, তা প্রমাণ হয় না।' },
-  { title: 'সময়: “কোথায়”-এর সঙ্গে “কখন”', duration: 16, shape: 'time',
-    text: 'একই জায়গায় দুটি ঘটনা হতে পারে, কিন্তু আলাদা সময়ে। ঘটনাটি চিহ্নিত করতে জায়গার তিনটি স্থানাঙ্কের সঙ্গে সময়ও লিখি।',
-    formula: 'ঘটনা A: (3, 2, 2, t = 0 s)\nঘটনা B: (3, 2, 2, t = 5 s)',
-    note: 'আপেক্ষিকতার spacetime-এ তিনটি স্থানিক মাত্রা ও একটি সময়ের মাত্রা থাকে। সময়কে নতুন স্থানিক রেখা হিসেবে আঁকছি না।' }
+export const FILM_DURATION = 125;
+export const FILM_SCENES = [
+  { at: 0, name: 'THE POINT', title: 'সবকিছুর শুরু। একটি বিন্দু।', subtitle: 'অবস্থান আছে। চলার স্বাধীন দিক এখনও নেই।' },
+  { at: 8, name: 'ONE DIRECTION', title: 'একটি পথ। একটি সংখ্যা।', subtitle: 'রেখায় কোথায় আছো, শুধু x বললেই হয়।' },
+  { at: 20, name: 'THE PLANE', title: 'আরেকটি দিক খুলে গেল।', subtitle: 'ডানে কতটা, ওপরে কতটা—দুটি সংখ্যা মিলে একটি অবস্থান।' },
+  { at: 34, name: 'THE VOLUME', title: 'সমতল থেকে উঠে এলো উচ্চতা।', subtitle: 'দৈর্ঘ্য, প্রস্থ, উচ্চতা। অবস্থানের জন্য এবার তিনটি সংখ্যা।' },
+  { at: 48, name: 'RIGHT ANGLES', title: 'তিন দিক। তিনটি সমকোণ।', subtitle: 'প্রতিটি অক্ষ অন্য দুটির সঙ্গে ৯০° কোণে।' },
+  { at: 59, name: 'THE FOURTH ATTEMPT', title: 'চতুর্থ স্বাধীন দিকটি কোথায়?', subtitle: 'হলুদ রেখা ঘোরে। তিনটি কোণই কি একসঙ্গে ৯০° হবে?' },
+  { at: 73, name: 'THE CONSTRAINT', title: 'তিনটি শর্ত। ক্রমে শূন্য।', subtitle: 'X, Y, Z—প্রতিটির সঙ্গে লম্ব হওয়ার শর্তটি দেখি।' },
+  { at: 89, name: 'BEYOND THE FRAME', title: 'গণিতের জগৎ এখানেই শেষ নয়।', subtitle: 'চার মাত্রায় চারটি স্থানাঙ্ক। এটি ৪D ঘনকের একটি ৩D প্রক্ষেপণ।' },
+  { at: 104, name: 'WHERE AND WHEN', title: 'একই স্থান। ভিন্ন সময়।', subtitle: 'ঘটনা চিহ্নিত করতে “কোথায়”-এর সঙ্গে “কখন”-ও লাগে।' },
+  { at: 116, name: 'AN OPEN QUESTION', title: 'তিনটি দিক। আরও বড় প্রশ্ন।', subtitle: 'এই 3D স্থানের সীমা দেখলাম—মহাবিশ্বের সব সম্ভাবনার সীমা নয়।' }
 ];
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp01(x); return x * x * (3 - 2 * x); };
+const phase = (time, from, to) => ease((time - from) / (to - from));
+export function anglesToAxes(vector) {
+  const length = Math.hypot(...vector);
+  if (length < 1e-8) return null;
+  return vector.map(component => Math.acos(Math.max(-1, Math.min(1, component / length))) * 180 / Math.PI);
+}
+export function projectTesseract(angle) {
+  const c = Math.cos(angle), s = Math.sin(angle), c2 = Math.cos(angle * 0.6), s2 = Math.sin(angle * 0.6);
+  return Array.from({ length: 16 }, (_, n) => {
+    let x = n & 1 ? 1 : -1, y = n & 2 ? 1 : -1;
+    const z = n & 4 ? 1 : -1;
+    let w = n & 8 ? 1 : -1;
+    [x, w] = [x * c - w * s, x * s + w * c];
+    [y, w] = [y * c2 - w * s2, y * s2 + w * c2];
+    const perspective = 4 / (4 - w);
+    return [x * perspective, y * perspective, z * perspective];
+  });
+}
 
 export function initializeSimulation() {
-  const byId = id => document.getElementById(id);
-  const container = byId('canvas-container');
+  const el = id => document.getElementById(id);
+  const container = el('canvas-container');
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x030610);
-  const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
-  const target = new THREE.Vector3(2, 2, 2);
+  scene.background = new THREE.Color(0x02050c);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 600 ? 1 : 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 600 ? 1.25 : 1.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   container.appendChild(renderer.domElement);
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.65, 0.35, 0.3));
-  composer.addPass(new FilmPass(0.065, false));
-
-  const dust = new THREE.Points(
-    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(
-      Array.from({ length: 1800 }, () => (Math.random() - 0.5) * 70), 3)),
-    new THREE.PointsMaterial({ size: 0.025, color: 0x66799e, transparent: true, opacity: 0.3 })
-  );
-  scene.add(dust);
-  const origin = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  scene.add(origin);
-  const point = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  scene.add(point);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.95, 0.45, 0.2);
+  composer.addPass(bloom);
+  composer.addPass(new FilmPass(0.09, false));
+  const geometryGroup = new THREE.Group(); scene.add(geometryGroup);
   const up = new THREE.Vector3(0, 1, 0);
   const directions = [new THREE.Vector3(1, 0, 0), up.clone(), new THREE.Vector3(0, 0, 1)];
-  const colors = [0xff5575, 0x52eaa0, 0x60a5ff];
-  function laser(color, radius = 0.023) {
-    const geometry = new THREE.CylinderGeometry(radius, radius, 1, 10);
-    geometry.translate(0, 0.5, 0);
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color }));
-    mesh.scale.y = 6;
-    scene.add(mesh);
-    return mesh;
+  const colors = [0xff6c86, 0x60edbf, 0x6faaff];
+  const colorCSS = ['#ff93a6', '#85f4cf', '#9cc6ff'];
+  const dust = new THREE.Points(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(
+      Array.from({ length: 3600 }, () => (Math.random() - 0.5) * 95), 3)),
+    new THREE.PointsMaterial({ color: 0x8194b6, size: 0.025, transparent: true, opacity: 0.4, depthWrite: false })
+  ); scene.add(dust);
+  function mesh(geometry, color, opacity = 1) {
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: opacity === 1 });
+    const object = new THREE.Mesh(geometry, material); geometryGroup.add(object); return object;
   }
-  const axes = colors.map((color, index) => {
-    const mesh = laser(color);
-    mesh.quaternion.setFromUnitVectors(up, directions[index]);
-    return mesh;
+  const origin = mesh(new THREE.SphereGeometry(0.07, 24, 24), 0xffffff);
+  const point = mesh(new THREE.SphereGeometry(0.09, 24, 24), 0xffedc1);
+  function beam(color, radius = 0.018) {
+    const geometry = new THREE.CylinderGeometry(radius, radius, 1, 12); geometry.translate(0, 0.5, 0);
+    return mesh(geometry, color);
+  }
+  const axes = colors.map((color, n) => {
+    const object = beam(color); object.quaternion.setFromUnitVectors(up, directions[n]); return object;
   });
-  const candidate = laser(0xffc75b, 0.042);
-  const candidateDirection = new THREE.Vector3(1, 1, 1).normalize();
-  function polyline(points, color, opacity = 1) {
-    const object = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(...p))),
-      new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
-    scene.add(object);
-    return object;
+  const arrowheads = colors.map((color, n) => {
+    const object = mesh(new THREE.ConeGeometry(0.09, 0.25, 16), color);
+    object.quaternion.setFromUnitVectors(up, directions[n]); return object;
+  });
+  function lines(points, color, opacity = 1, segments = false) {
+    const geometry = new THREE.BufferGeometry().setFromPoints(points.map(p => new THREE.Vector3(...p)));
+    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+    const object = segments ? new THREE.LineSegments(geometry, material) : new THREE.Line(geometry, material);
+    geometryGroup.add(object); return object;
   }
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(4, 4),
-    new THREE.MeshBasicMaterial({ color: 0x44c9b2, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false }));
-  plane.position.set(2, 2, 0);
-  scene.add(plane);
-  const grid = new THREE.Group();
+  const grid = new THREE.Group(); geometryGroup.add(grid);
   for (let n = 0; n <= 4; n++) {
     for (const points of [[[n, 0, 0], [n, 4, 0]], [[0, n, 0], [4, n, 0]]]) {
-      const line = polyline(points, 0x64ddbe, 0.4);
-      scene.remove(line); grid.add(line);
+      const line = lines(points, 0x50b99d, 0.32); grid.add(line);
     }
   }
-  scene.add(grid);
-  const cube = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 4, 4)),
-    new THREE.LineBasicMaterial({ color: 0x9cbcff, transparent: true, opacity: 0.7 }));
-  cube.position.set(2, 2, 2);
-  scene.add(cube);
+  const plane = mesh(new THREE.PlaneGeometry(4, 4), 0x37b9b0, 0.13); plane.material.side = THREE.DoubleSide;
+  plane.position.set(2, 2, 0);
+  const cube = lines([], 0x9fc4ff, 0.7, true);
+  cube.geometry.dispose(); cube.geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 4, 4)); cube.position.set(2, 2, 0);
+  const volume = mesh(new THREE.BoxGeometry(4, 4, 4), 0x4685c7, 0.055); volume.position.set(2, 2, 0);
+  const candidate = beam(0xffc56a, 0.025);
+  const candidateHead = mesh(new THREE.ConeGeometry(0.11, 0.27, 16), 0xffc56a);
+  const componentBeams = colors.map(color => beam(color, 0.014));
+  const projectionGuides = lines(Array.from({ length: 6 }, () => [0, 0, 0]), 0xffedc1, 0.55, true);
+  const guideArray = projectionGuides.geometry.attributes.position;
   const marks = [
-    polyline([[0.7, 0, 0], [0.7, 0.7, 0], [0, 0.7, 0]], 0xf7edc3),
-    polyline([[0, 0.7, 0], [0, 0.7, 0.7], [0, 0, 0.7]], 0xf7edc3),
-    polyline([[0.7, 0, 0], [0.7, 0, 0.7], [0, 0, 0.7]], 0xf7edc3)
+    lines([[0.6, 0, 0], [0.6, 0.6, 0], [0, 0.6, 0]], 0xffedc1),
+    lines([[0, 0.6, 0], [0, 0.6, 0.6], [0, 0, 0.6]], 0xffedc1),
+    lines([[0.6, 0, 0], [0.6, 0, 0.6], [0, 0, 0.6]], 0xffedc1)
   ];
-  const guides = new THREE.LineSegments(new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: 0xffe8a6, transparent: true, opacity: 0.8 }));
-  scene.add(guides);
-  function setGuides(position) {
-    const { x, y, z } = position;
-    guides.geometry.dispose();
-    guides.geometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, 0, 0),
-      new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, y, 0),
-      new THREE.Vector3(x, y, 0), new THREE.Vector3(x, y, z)
-    ]);
+  const waveRings = Array.from({ length: 3 }, () => {
+    const object = mesh(new THREE.RingGeometry(0.96, 1, 80), 0x8cbcff, 0); object.material.side = THREE.DoubleSide; return object;
+  });
+  const tesseractEdges = [];
+  for (let a = 0; a < 16; a++) for (let bit = 0; bit < 4; bit++) {
+    const b = a ^ (1 << bit); if (a < b) tesseractEdges.push([a, b]);
   }
-  const labelDefinitions = [
-    ['label-x', new THREE.Vector3(6.3, 0, 0)],
-    ['label-y', new THREE.Vector3(0, 6.3, 0)],
-    ['label-z', new THREE.Vector3(0, 0, 6.3)],
-    ['label-origin', new THREE.Vector3(-0.2, -0.2, 0)],
-    ['label-point', point.position],
-    ['label-w', new THREE.Vector3()]
-  ];
+  const tesseract = lines(Array.from({ length: 64 }, () => [0, 0, 0]), 0xace0ff, 0.85, true);
+  const tesseractVertices = tesseract.geometry.attributes.position;
+  const tessPoints = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(48), 3)),
+    new THREE.PointsMaterial({ color: 0xffe6b7, size: 0.07, transparent: true })); geometryGroup.add(tessPoints);
+  const constraints = [mesh(new THREE.PlaneGeometry(4, 4), colors[0], 0), mesh(new THREE.PlaneGeometry(4, 4), colors[1], 0)];
+  constraints[0].rotation.y = Math.PI / 2; constraints[0].position.set(0, 2, 2);
+  constraints[1].rotation.x = Math.PI / 2; constraints[1].position.set(0, 0, 2);
+  constraints.forEach(object => { object.material.side = THREE.DoubleSide; object.material.depthWrite = false; });
 
-  let audioCtx = null, drone = null;
-  let started = false, running = true, paused = false, index = -1;
-  let stepTimeline = null;
-  const elapsed = { value: 0 };
-  let activeShape = 'point';
+  const playhead = { time: 0 };
+  let timeline = null, started = false, complete = false, running = true, currentScene = -1;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let audioCtx = null, audioMaster = null, audioNodes = [];
   function startAudio() {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
-      audioCtx = new AudioContext();
-      audioCtx.resume().catch(() => {});
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.value = 48;
-      gain.gain.value = 0.045;
-      osc.connect(gain); gain.connect(audioCtx.destination); osc.start();
-      drone = { osc, gain };
-    } catch (error) { console.warn('Audio unavailable; continuing visually.', error); }
+      audioCtx ||= new AudioContext(); audioCtx.resume().catch(() => {});
+      audioMaster = audioCtx.createGain(); audioMaster.gain.value = 0;
+      audioMaster.connect(audioCtx.destination); audioMaster.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 2);
+      audioNodes = [55, 82.4069, 110].map((frequency, n) => {
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.value = frequency; gain.gain.value = n === 0 ? 0.32 : 0.09;
+        osc.connect(gain); gain.connect(audioMaster); osc.start(); return { osc, gain };
+      });
+    } catch (error) { console.warn('Audio unavailable; the film continues visually.', error); }
   }
   function stopAudio() {
-    if (!drone) return;
-    drone.gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
-    drone.osc.stop(audioCtx.currentTime + 1);
-    drone = null;
+    if (!audioMaster) return;
+    audioMaster.gain.cancelScheduledValues(audioCtx.currentTime);
+    audioMaster.gain.setTargetAtTime(0, audioCtx.currentTime, 0.35);
+    for (const node of audioNodes) node.osc.stop(audioCtx.currentTime + 2);
+    audioNodes = []; audioMaster = null;
   }
-  function setSound() {
-    if (!drone) return;
-    drone.gain.gain.setTargetAtTime(paused || byId('sound-btn').getAttribute('aria-pressed') === 'true' ? 0 : 0.045,
-      audioCtx.currentTime, 0.1);
+  function cue(sceneIndex) {
+    if (!audioMaster || audioCtx.state !== 'running') return;
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = 'triangle'; osc.frequency.value = [220, 277.18, 329.63, 440][sceneIndex % 4];
+    gain.gain.value = 0; gain.gain.linearRampToValueAtTime(0.065, audioCtx.currentTime + 0.09);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.6);
+    osc.connect(gain); gain.connect(audioMaster); osc.start(); osc.stop(audioCtx.currentTime + 1.7);
   }
-  function cameraPosition(shape) {
-    const narrow = container.clientWidth / container.clientHeight < 1.25;
-    if (shape === 'line') return { x: 3, y: 0.8, z: narrow ? 15 : 11 };
-    if (shape === 'plane') return { x: 2, y: 2, z: narrow ? 17 : 12 };
-    return { x: narrow ? 13 : 11, y: narrow ? 10 : 8, z: narrow ? 16 : 13 };
+  const labels = [
+    ['label-x', new THREE.Vector3(6.4, 0, 0)], ['label-y', new THREE.Vector3(0, 6.4, 0)],
+    ['label-z', new THREE.Vector3(0, 0, 6.4)], ['label-point', point.position],
+    ['label-w', new THREE.Vector3()], ['angle-xy', new THREE.Vector3(0.85, 0.85, 0)],
+    ['angle-yz', new THREE.Vector3(0, 0.85, 0.85)], ['angle-zx', new THREE.Vector3(0.85, 0, 0.85)]
+  ];
+  const proofValues = [el('component-a'), el('component-b'), el('component-c')];
+  const cameraPaths = [
+    [[1.7, 0.8, 3.5], [5, 2, 9]], [[5, 2, 9], [4, 1, 11]], [[4, 1, 11], [2, 2, 13]],
+    [[2, 2, 13], [11, 9, 12]], [[11, 9, 12], [9, 7, 11]], [[9, 7, 11], [10, 7, 13]],
+    [[10, 7, 13], [8, 5, 10]], [[8, 5, 10], [7, 4, 10]], [[7, 4, 10], [10, 7, 12]],
+    [[10, 7, 12], [12, 8, 16]]
+  ];
+  const targetPaths = [
+    [[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [2, 0, 0]], [[2, 0, 0], [2, 2, 0]],
+    [[2, 2, 0], [2, 2, 2]], [[2, 2, 2], [1.4, 1.4, 1.4]], [[1.4, 1.4, 1.4], [2, 2, 2]],
+    [[2, 2, 2], [0, 0, 0]], [[0, 0, 0], [0, 0, 0]], [[0, 0, 0], [2, 2, 2]],
+    [[2, 2, 2], [0, 0, 0]]
+  ];
+  const aim = new THREE.Vector3(), temp = new THREE.Vector3(), direction = new THREE.Vector3(), projected = new THREE.Vector3();
+  function drawBeam(object, start, end) {
+    object.position.copy(start); direction.copy(end).sub(start);
+    const length = direction.length(); object.visible = length > 0.005;
+    object.scale.y = Math.max(0.0001, length);
+    if (length > 0.005) object.quaternion.setFromUnitVectors(up, direction.normalize());
   }
-  function setStep(nextIndex) {
-    if (stepTimeline) stepTimeline.kill();
-    if (nextIndex >= LESSON_STEPS.length) { finish(); return; }
-    index = Math.max(0, nextIndex);
-    const step = LESSON_STEPS[index];
-    activeShape = step.shape;
-    document.body.classList.toggle('proof-step', activeShape === 'proof');
-    elapsed.value = 0;
-    paused = false;
-    byId('pause-btn').textContent = 'বিরতি';
-    byId('pause-btn').setAttribute('aria-pressed', 'false');
-    setSound();
-    byId('lesson-panel').hidden = false;
-    byId('terminal-screen').hidden = true;
-    byId('step-title').textContent = step.title;
-    byId('subtitle-text').textContent = step.text;
-    byId('formula').textContent = step.formula;
-    byId('lesson-note').textContent = step.note;
-    byId('step-count').textContent = `${index + 1} / ${LESSON_STEPS.length}`;
-    byId('prev-btn').disabled = index === 0;
-    byId('next-btn').textContent = index === LESSON_STEPS.length - 1 ? 'সারাংশ' : 'পরের ধাপ →';
-    byId('pause-btn').disabled = false;
-    byId('next-btn').disabled = false;
-    byId('lesson-controls').hidden = false;
-    byId('lesson-progress').setAttribute('aria-valuenow', String(index + 1));
-    byId('lesson-panel').scrollTop = 0;
-    const dimension = activeShape === 'point' ? 0 : activeShape === 'line' ? 1 : activeShape === 'plane' ? 2 : 3;
-    axes.forEach((axis, n) => { axis.visible = n < dimension; axis.scale.y = 6; byId(`label-${'xyz'[n]}`).hidden = !axis.visible; });
-    plane.visible = grid.visible = activeShape === 'plane';
-    cube.visible = ['cube', 'angles', 'four', 'time'].includes(activeShape);
-    candidate.visible = ['candidate', 'overlap'].includes(activeShape);
-    marks.forEach((mark, n) => { mark.visible = dimension >= 2 && (n === 0 || activeShape === 'angles'); });
-    point.visible = ['line', 'plane', 'cube', 'time'].includes(activeShape);
-    point.position.set(3, dimension >= 2 ? 2 : 0, dimension >= 3 ? 2 : 0);
-    setGuides(point.position);
-    guides.visible = point.visible;
-    byId('label-point').hidden = !point.visible;
-    byId('label-point').textContent = activeShape === 'time' ? 'A · t = 0 s' : 'P';
-    byId('label-w').hidden = !candidate.visible;
-    byId('label-origin').hidden = activeShape === 'point';
-    byId('angle-readout').hidden = !['angles', 'candidate', 'overlap'].includes(activeShape);
-    byId('proof-explanation').hidden = activeShape !== 'proof';
-    byId('coordinate-four').hidden = activeShape !== 'four';
-    target.set(2, dimension < 2 ? 0 : 2, dimension < 3 ? 0 : 2);
-    camera.up.set(0, dimension < 3 ? 1 : 0, dimension < 3 ? 0 : 1);
-    if (activeShape === 'overlap') candidateDirection.set(0, 0, 1);
-    if (activeShape === 'candidate') candidateDirection.set(1, 1, 1).normalize();
-    candidate.quaternion.setFromUnitVectors(up, candidateDirection);
-    if (activeShape === 'angles') byId('angle-values').textContent = 'X–Y: 90°   Y–Z: 90°   Z–X: 90°';
-    byId('angle-caption').textContent = activeShape === 'angles' ? 'পরস্পর লম্ব তিনটি অক্ষ' : 'W-এর সঙ্গে আসল 3D কোণ';
-    stepTimeline = gsap.timeline({ onComplete: () => setStep(index + 1) });
-    stepTimeline.to(camera.position, { ...cameraPosition(activeShape), duration: reduceMotion ? 0 : 1.7, ease: 'sine.inOut' }, 0);
-    if (dimension > 0 && index <= 3 && !reduceMotion) {
-      const axis = axes[dimension - 1];
-      axis.scale.y = 0.0001;
-      stepTimeline.to(axis.scale, { y: 6, duration: 1.7, ease: 'power2.out' }, 0);
+  function updateTesseract(t, opacity) {
+    const points = projectTesseract(reduceMotion ? 0.3 : (t - 89) * 0.16);
+    tesseract.visible = tessPoints.visible = opacity > 0;
+    tesseract.material.opacity = opacity;
+    tessPoints.material.opacity = opacity;
+    tesseractEdges.forEach(([a, b], n) => { tesseractVertices.setXYZ(n * 2, ...points[a]); tesseractVertices.setXYZ(n * 2 + 1, ...points[b]); });
+    points.forEach((p, n) => tessPoints.geometry.attributes.position.setXYZ(n, ...p));
+    tesseractVertices.needsUpdate = tessPoints.geometry.attributes.position.needsUpdate = true;
+    tesseract.geometry.computeBoundingSphere(); tessPoints.geometry.computeBoundingSphere();
+    const scale = 1.55 * phase(t, 89, 93); tesseract.scale.setScalar(scale); tessPoints.scale.setScalar(scale);
+  }
+  function updateFilm(t) {
+    const sceneIndex = FILM_SCENES.reduce((n, shot, i) => t >= shot.at ? i : n, 0);
+    const shot = FILM_SCENES[sceneIndex];
+    const end = FILM_SCENES[sceneIndex + 1]?.at ?? FILM_DURATION;
+    const local = t - shot.at, progress = (t - shot.at) / (end - shot.at);
+    if (currentScene !== sceneIndex) {
+      currentScene = sceneIndex;
+      el('scene-name').textContent = shot.name;
+      el('scene-number').textContent = `${String(sceneIndex + 1).padStart(2, '0')} / 10`;
+      el('film-title').textContent = shot.title; el('film-subtitle').textContent = shot.subtitle;
+      el('captions').classList.remove('reveal'); void el('captions').offsetWidth; el('captions').classList.add('reveal');
+      cue(sceneIndex);
     }
-    stepTimeline.to(elapsed, { value: step.duration, duration: step.duration, ease: 'none' }, 0);
+    el('progress-fill').style.width = `${clamp01(t / FILM_DURATION) * 100}%`;
+    const [cameraFrom, cameraTo] = cameraPaths[sceneIndex], [targetFrom, targetTo] = targetPaths[sceneIndex];
+    const p = reduceMotion ? 1 : phase(t, shot.at, shot.at + 3.2);
+    aim.fromArray(targetFrom).lerp(temp.fromArray(targetTo), p);
+    camera.position.fromArray(cameraFrom).lerp(temp.fromArray(cameraTo), p);
+    if (!reduceMotion && local > 3.2) {
+      camera.position.sub(aim).applyAxisAngle(sceneIndex < 3 ? up : directions[2], Math.sin(progress * Math.PI) * 0.055).add(aim);
+    }
+    const fit = Math.max(1.17, 1 / camera.aspect);
+    camera.position.sub(aim).multiplyScalar(fit).add(aim);
+    const tilt = phase(t, 35, 43);
+    camera.up.set(0, 1 - tilt, tilt).normalize(); camera.lookAt(aim); camera.updateMatrixWorld();
+    const shapeOpacity = t < 89 ? 1 : t < 104 ? 1 - phase(t, 89, 92) : t < 116 ? phase(t, 104, 107) : 1 - phase(t, 116, 120);
+    origin.visible = shapeOpacity > 0.01; origin.material.opacity = shapeOpacity;
+    origin.scale.setScalar(t < 8 ? 0.8 + Math.sin(t * 1.7) * 0.12 : 1);
+    const proofFit = t >= 73 && t < 89 ? 1 - 0.2 * phase(t, 73, 75) : 1;
+    const lengths = [6 * phase(t, 8, 12), 6 * phase(t, 20, 24), 6 * phase(t, 34, 39)].map(length => length * proofFit);
+    axes.forEach((axis, n) => {
+      axis.visible = lengths[n] > 0.01 && shapeOpacity > 0.01; axis.scale.y = Math.max(lengths[n], 0.0001);
+      axis.material.opacity = shapeOpacity;
+      arrowheads[n].visible = axis.visible; arrowheads[n].position.copy(directions[n]).multiplyScalar(lengths[n]);
+      arrowheads[n].material.opacity = shapeOpacity;
+      labels[n][1].copy(directions[n]).multiplyScalar(lengths[n] + 0.35);
+      el(`label-${'xyz'[n]}`).hidden = !axis.visible || t < [11, 23, 38][n];
+    });
+    const planeReveal = phase(t, 21, 26);
+    plane.visible = grid.visible = t >= 20 && t < 59 || t >= 104 && t < 116;
+    plane.position.set(2 * planeReveal, 2 * planeReveal, 0);
+    plane.scale.set(planeReveal, planeReveal, 1); plane.material.opacity = 0.13 * shapeOpacity;
+    grid.scale.set(planeReveal, planeReveal, 1);
+    const depth = t < 104 ? phase(t, 35, 42) : 1;
+    cube.visible = volume.visible = t >= 34 && t < 59 || t >= 104 && t < 116;
+    cube.scale.z = volume.scale.z = Math.max(depth, 0.0001); cube.position.z = volume.position.z = depth * 2;
+    cube.material.opacity = 0.68 * shapeOpacity; volume.material.opacity = 0.06 * shapeOpacity;
+    point.visible = t >= 11 && t < 48 || t >= 104 && t < 116;
+    point.position.set(3 * phase(t, 11, 16), t < 34 ? 2 * phase(t, 26, 30) : 2, t < 104 ? 2 * phase(t, 41, 45) : 2);
+    el('label-point').hidden = !point.visible;
+    const coordinates = point.position.toArray().map(value => Number(value.toFixed(1)));
+    el('label-point').textContent = t < 20 ? `x = ${coordinates[0]}` : t < 34 ? `(${coordinates[0]}, ${coordinates[1]})` : t < 104 ? `(${coordinates.join(', ')})` : t < 109 ? 'A · t = 0 s' : 'B · t = 5 s';
+    projectionGuides.visible = point.visible;
+    const v = point.position;
+    [[0, 0, 0], [v.x, 0, 0], [v.x, 0, 0], [v.x, v.y, 0], [v.x, v.y, 0], [v.x, v.y, v.z]].forEach((p, n) => guideArray.setXYZ(n, ...p));
+    guideArray.needsUpdate = true; projectionGuides.geometry.computeBoundingSphere();
+    marks.forEach((mark, n) => {
+      mark.visible = t >= [22, 48, 48][n] && t < 73;
+      const emphasis = sceneIndex === 4 ? Math.floor(local / 3.5) % 3 : 0;
+      mark.material.opacity = sceneIndex === 4 && emphasis !== n ? 0.3 : 1;
+      el(['angle-xy', 'angle-yz', 'angle-zx'][n]).hidden = !mark.visible || t < (n === 0 ? 22 : 48);
+    });
+    candidate.visible = candidateHead.visible = t >= 59 && t < 86;
+    el('label-w').hidden = !candidate.visible;
+    el('angle-readout').hidden = t < 59 || t >= 73;
+    el('component-readout').hidden = t < 73 || t >= 89;
+    el('equation').hidden = ![1, 2, 3, 6, 7, 8].includes(sceneIndex);
+    const w = new THREE.Vector3();
+    if (t >= 59 && t < 73) {
+      const spin = reduceMotion ? 0.8 : local * 0.85;
+      w.set(Math.cos(spin), 0.45 + Math.sin(spin * 0.7), Math.sin(spin)).normalize();
+      const align = phase(t, 67, 70);
+      w.lerp(directions[2], align).normalize().multiplyScalar(5.8);
+      const angles = anglesToAxes([w.x, w.y, w.z]);
+      el('angle-values').textContent = angles.map((a, n) => `${'XYZ'[n]} ${a.toFixed(0)}°`).join('   ');
+      el('angle-label').textContent = t < 70 ? 'W-এর সঙ্গে তিন অক্ষের কোণ' : '৯০° · ৯০° · ০° — W এখন Z-এরই দিক';
+      if (t >= 70) { el('film-title').textContent = 'দুটির সঙ্গে লম্ব। তৃতীয়টিরই পথ।'; el('film-subtitle').textContent = 'X ও Y-এর সঙ্গে লম্ব হলে W, Z-এর দিকেই এসে পড়ে। নতুন স্বাধীন অক্ষ হয় না।'; }
+    }
+    if (t >= 73 && t < 89) {
+      const components = [3 * (1 - phase(t, 75, 78)), 2 * (1 - phase(t, 79, 82)), 2 * (1 - phase(t, 83, 86))];
+      w.fromArray(components);
+      proofValues.forEach((element, n) => { element.textContent = `${'abc'[n]} = ${components[n].toFixed(1)}`; element.classList.toggle('locked', components[n] < 0.005); element.style.color = colorCSS[n]; });
+      const ends = [new THREE.Vector3(components[0], 0, 0), new THREE.Vector3(components[0], components[1], 0), w.clone()];
+      componentBeams.forEach((object, n) => drawBeam(object, n ? ends[n - 1] : new THREE.Vector3(), ends[n]));
+      constraints[0].material.opacity = t < 79 ? 0.12 * phase(t, 74, 75) : 0;
+      constraints[1].material.opacity = t >= 79 && t < 83 ? 0.12 : 0;
+      el('equation').textContent = t < 79 ? 'W ⟂ X  ⇒  a = 0' : t < 83 ? 'W ⟂ Y  ⇒  b = 0' : t < 86 ? 'W ⟂ Z  ⇒  c = 0' : 'W = (0, 0, 0)';
+      if (t >= 86) { el('film-title').textContent = 'সব উপাংশ শূন্য। কোনো দিক নেই।'; el('film-subtitle').textContent = 'তাই এই 3D স্থানে তিন অক্ষের সঙ্গে লম্ব নতুন অশূন্য ভেক্টর পাওয়া যায় না।'; }
+    } else {
+      componentBeams.forEach(object => { object.visible = false; });
+      constraints.forEach(object => { object.material.opacity = 0; });
+    }
+    if (candidate.visible) {
+      drawBeam(candidate, new THREE.Vector3(), w);
+      candidateHead.visible = candidate.visible; candidateHead.position.copy(w); candidateHead.quaternion.copy(candidate.quaternion);
+      labels[4][1].copy(w).multiplyScalar(0.88);
+    }
+    if (sceneIndex === 1) el('equation').textContent = '1D   ·   (x)';
+    if (sceneIndex === 2) el('equation').textContent = '2D   ·   (x, y)';
+    if (sceneIndex === 3) el('equation').textContent = '3D   ·   (x, y, z)';
+    if (sceneIndex === 7) el('equation').textContent = '4D   ·   (x, y, z, w)';
+    if (sceneIndex === 8) el('equation').textContent = 'স্থান + সময়   ·   (x, y, z, t)';
+    const tessOpacity = t >= 89 && t < 104 ? 0.85 * phase(t, 89, 92) * (1 - phase(t, 101, 104)) : t >= 116 ? 0.32 * phase(t, 116, 120) : 0;
+    updateTesseract(t, tessOpacity);
+    waveRings.forEach((ring, n) => {
+      const active = t < 8 || t >= 104 && t < 116;
+      ring.visible = active;
+      if (active) {
+        const cycle = ((t < 8 ? t : t - 104) + n * 0.65) % 2.2 / 2.2;
+        ring.position.copy(t < 8 ? origin.position : point.position); ring.quaternion.copy(camera.quaternion);
+        ring.scale.setScalar(0.2 + cycle * (t < 8 ? 1.8 : 1.1));
+        ring.material.opacity = (1 - cycle) * 0.3;
+        ring.material.color.setHex(t >= 109 ? 0xffc56a : 0x8cbcff);
+      }
+    });
+    if (!reduceMotion) dust.rotation.y = t * 0.009;
+    for (const [id, position] of labels) {
+      const label = el(id); if (label.hidden) continue;
+      projected.copy(position).project(camera);
+      label.style.left = `${THREE.MathUtils.clamp((projected.x * 0.5 + 0.5) * container.clientWidth, 36, container.clientWidth - 36)}px`;
+      label.style.top = `${THREE.MathUtils.clamp((-projected.y * 0.5 + 0.5) * container.clientHeight, container.clientHeight * 0.16, container.clientHeight * 0.72)}px`;
+    }
   }
-  function finish() {
-    stopAudio();
-    index = LESSON_STEPS.length;
-    byId('lesson-panel').hidden = true;
-    byId('terminal-screen').hidden = false;
-    byId('angle-readout').hidden = true;
-    byId('step-count').textContent = 'সম্পূর্ণ';
-    byId('pause-btn').disabled = byId('next-btn').disabled = true;
-    byId('prev-btn').disabled = false;
-    byId('progress-fill').style.width = '100%';
-    byId('lesson-progress').setAttribute('aria-valuenow', String(LESSON_STEPS.length));
+  function finishFilm() {
+    complete = true; stopAudio(); el('end-screen').hidden = false;
+    el('cinema-hud').hidden = true; el('captions').hidden = true;
+    for (const id of ['equation', 'angle-readout', 'component-readout']) el(id).hidden = true;
   }
-  byId('start-btn').addEventListener('click', () => {
-    if (started) return;
-    started = true;
-    startAudio();
-    byId('start-screen').hidden = true;
-    byId('lesson-hud').hidden = false;
-    byId('label-origin').hidden = false;
-    document.body.classList.add('immersive');
-    setStep(0);
-  });
-  byId('prev-btn').addEventListener('click', () => setStep(index - 1));
-  byId('next-btn').addEventListener('click', () => setStep(index + 1));
-  byId('pause-btn').addEventListener('click', () => {
-    paused = !paused;
-    stepTimeline.paused(paused);
-    byId('pause-btn').textContent = paused ? 'চালিয়ে যাও' : 'বিরতি';
-    byId('pause-btn').setAttribute('aria-pressed', String(paused));
-    setSound();
-  });
-  byId('sound-btn').addEventListener('click', () => {
-    const muted = byId('sound-btn').getAttribute('aria-pressed') !== 'true';
-    byId('sound-btn').setAttribute('aria-pressed', String(muted));
-    byId('sound-btn').textContent = muted ? 'সাউন্ড বন্ধ' : 'সাউন্ড চালু';
-    setSound();
-  });
-  byId('replay-btn').addEventListener('click', () => { startAudio(); setStep(0); });
+  function playFilm() {
+    if (started && !complete) return;
+    if (timeline) timeline.kill();
+    started = true; complete = false; currentScene = -1; playhead.time = 0;
+    el('start-screen').hidden = true; el('end-screen').hidden = true;
+    el('cinema-hud').hidden = false; el('captions').hidden = false;
+    startAudio(); updateFilm(0);
+    timeline = gsap.timeline({ data: 'spatial-film', onComplete: finishFilm });
+    timeline.to(playhead, { time: FILM_DURATION, duration: FILM_DURATION, ease: 'none' });
+  }
+  el('start-btn').addEventListener('click', playFilm);
+  el('replay-btn').addEventListener('click', playFilm);
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && stepTimeline && index < LESSON_STEPS.length && !paused) byId('pause-btn').click();
+    if (!timeline || complete) return;
+    timeline.paused(document.hidden);
+    if (audioMaster) audioMaster.gain.setTargetAtTime(document.hidden ? 0 : 0.22, audioCtx.currentTime, 0.2);
   });
   renderer.domElement.addEventListener('webglcontextlost', event => {
-    event.preventDefault(); running = false;
-    if (stepTimeline) stepTimeline.kill(); stopAudio();
+    event.preventDefault(); running = false; if (timeline) timeline.kill(); stopAudio();
     window.simulationUI.failed(new Error('Graphics context lost. Reload to try again.'));
   });
   function resize() {
-    const width = container.clientWidth, height = container.clientHeight;
-    renderer.setSize(width, height); composer.setSize(width, height);
-    camera.aspect = width / height; camera.updateProjectionMatrix();
-    if (stepTimeline && index < LESSON_STEPS.length) {
-      const wasPaused = paused;
-      const time = elapsed.value;
-      setStep(Math.min(index, LESSON_STEPS.length - 1));
-      stepTimeline.seek(time, false);
-      if (wasPaused) byId('pause-btn').click();
-    } else camera.position.set(11, 8, 13);
+    const w = container.clientWidth, h = container.clientHeight;
+    renderer.setSize(w, h); composer.setSize(w, h); camera.aspect = w / h;
+    camera.setViewOffset(w, h, 0, h * 0.065, w, h); camera.updateProjectionMatrix();
+    if (started) updateFilm(playhead.time);
   }
-  window.addEventListener('resize', resize);
-  resize();
-  axes.forEach(axis => { axis.visible = false; });
-  for (const item of [plane, grid, cube, candidate, point, guides, ...marks]) item.visible = false;
-  const projection = new THREE.Vector3();
+  window.addEventListener('resize', resize); resize(); updateFilm(0);
   const clock = new THREE.Clock();
   function animate() {
     if (!running) return;
     requestAnimationFrame(animate);
     const delta = Math.min(clock.getDelta(), 0.1);
-    if (!paused && !reduceMotion) dust.rotation.y += delta * 0.025;
-    if (activeShape === 'candidate' && !reduceMotion) {
-      const t = elapsed.value * 0.5;
-      candidateDirection.set(Math.cos(t), 0.5 + Math.sin(t * 0.7), Math.sin(t)).normalize();
-    }
-    if (candidate.visible) {
-      candidate.quaternion.setFromUnitVectors(up, candidateDirection);
-      labelDefinitions[5][1].copy(candidateDirection).multiplyScalar(5.2);
-      const angles = directions.map(direction => THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(candidateDirection.dot(direction), -1, 1))));
-      byId('angle-values').textContent = `X: ${angles[0].toFixed(1)}°   Y: ${angles[1].toFixed(1)}°   Z: ${angles[2].toFixed(1)}°`;
-    }
-    if (activeShape === 'time') byId('label-point').textContent = elapsed.value < 8 ? 'A · t = 0 s' : 'B · t = 5 s';
-    if (index >= 0 && index < LESSON_STEPS.length) byId('progress-fill').style.width = `${(index + elapsed.value / LESSON_STEPS[index].duration) / LESSON_STEPS.length * 100}%`;
-    camera.lookAt(target); camera.updateMatrixWorld();
-    for (const [id, position] of labelDefinitions) {
-      const label = byId(id);
-      if (label.hidden) continue;
-      projection.copy(position).project(camera);
-      const x = (projection.x * 0.5 + 0.5) * container.clientWidth;
-      const y = (-projection.y * 0.5 + 0.5) * container.clientHeight;
-      label.style.left = `${THREE.MathUtils.clamp(x, 52, container.clientWidth - 52)}px`;
-      label.style.top = `${THREE.MathUtils.clamp(y, 20, container.clientHeight - 20)}px`;
-    }
+    if (started) updateFilm(playhead.time);
     try { composer.render(delta); }
-    catch (error) { running = false; if (stepTimeline) stepTimeline.kill(); stopAudio(); window.simulationUI.failed(error); }
+    catch (error) { running = false; if (timeline) timeline.kill(); stopAudio(); window.simulationUI.failed(error); }
   }
-  animate();
-  window.simulationUI.ready();
+  animate(); window.simulationUI.ready();
 }
