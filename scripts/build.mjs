@@ -13,4 +13,5 @@ await rm('dist', { recursive: true, force: true });
 await mkdir('dist/assets', { recursive: true });
 await cp('index.html', 'dist/index.html');
 await cp('assets/simulation.js', 'dist/assets/simulation.js');
+await cp('assets/fonts', 'dist/assets/fonts', { recursive: true });
 console.log('Static site built in dist/');
