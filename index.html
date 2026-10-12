@@ -3,141 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#030610">
-  <title>Spatial Reality — মাত্রা বুঝি, ধাপে ধাপে</title>
+  <meta name="theme-color" content="#02050c">
+  <title>Spatial Reality — A cinematic journey through dimensions</title>
   <style>
-    @font-face { font-family: 'Tiro Bangla'; src: url('./assets/fonts/tiro-bangla-bengali-400-normal.woff2') format('woff2'); font-style: normal; font-weight: 400; font-display: swap; }
-    @font-face { font-family: 'Tiro Bangla'; src: url('./assets/fonts/tiro-bangla-latin-400-normal.woff2') format('woff2'); font-style: normal; font-weight: 400; font-display: swap; unicode-range: U+0000-00FF; }
-    :root { color-scheme: dark; --ink: #f0f3fa; --muted: #a6b3c9; --panel-space: 285px; }
+    @font-face { font-family: 'Tiro Bangla'; src: url('./assets/fonts/tiro-bangla-bengali-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+    @font-face { font-family: 'Tiro Bangla'; src: url('./assets/fonts/tiro-bangla-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF; }
+    :root { color-scheme: dark; --muted: #97a8c3; --cream: #f4e7ce; }
     * { box-sizing: border-box; }
     [hidden] { display: none !important; }
-    body { margin: 0; overflow: hidden; background: #030610; color: var(--ink); font-family: 'Tiro Bangla', Georgia, serif; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    button { font: inherit; cursor: pointer; color: var(--ink); background: #101929; border: 1px solid #40506a; border-radius: 9px; padding: 10px 18px; }
-    button:hover { border-color: #b3c7ea; background: #172338; }
-    button:disabled { opacity: .4; cursor: default; }
-    button:focus-visible, a:focus-visible { outline: 3px solid #ffc75b; outline-offset: 4px; }
-    #canvas-container { position: absolute; inset: 70px 0 var(--panel-space); min-height: 140px; }
+    body { margin: 0; overflow: hidden; background: #02050c; color: #eff3fb; font-family: 'Tiro Bangla', Georgia, serif; }
+    #canvas-container { position: absolute; inset: 0; }
     canvas { display: block; }
-    #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 33%, transparent 35%, #030610b0 100%); pointer-events: none; z-index: 2; }
-    .cinema-bar { position: absolute; left: 0; width: 100%; height: 6vh; background: #000; z-index: 3; transition: height 1.5s; pointer-events: none; }
-    #bar-top { top: 0; } #bar-bottom { bottom: 0; } body.immersive .cinema-bar { height: 0; }
-    #start-screen { position: absolute; inset: 0; padding: 26px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: #030610f5; z-index: 50; }
-    .eyebrow { font: 11px/1.5 system-ui, sans-serif; text-transform: uppercase; letter-spacing: 3px; color: #82a7cc; }
-    #start-screen h1 { margin: 16px 0; font: 300 clamp(30px, 6vw, 62px)/1.1 system-ui, sans-serif; letter-spacing: 6px; }
-    #start-screen .intro { max-width: 550px; color: #bbc7da; font-size: 20px; line-height: 1.7; margin: 10px 0 30px; }
-    #start-btn { padding: 15px 34px; border-color: #7193bd; font-size: 18px; }
-    #startup-status { margin-top: 20px; max-width: 540px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+    #vignette { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at 50% 43%, transparent 33%, #01030b99 95%), linear-gradient(transparent 55%, #01030bcc 100%); }
+    .cinema-bar { position: absolute; left: 0; right: 0; height: 8vh; background: #010207; z-index: 3; pointer-events: none; }
+    #bar-top { top: 0; border-bottom: 1px solid #172235; } #bar-bottom { bottom: 0; border-top: 1px solid #172235; }
+    #cinema-hud { position: absolute; top: 11vh; left: 6vw; right: 6vw; z-index: 6; display: flex; align-items: center; justify-content: space-between; gap: 16px; font: 10px/1.5 system-ui, sans-serif; letter-spacing: 2px; color: #8396b4; }
+    .brand { color: #d3deef; letter-spacing: 3px; } #scene-name { text-align: center; } #scene-number { color: #e5d6b9; }
+    #captions { position: absolute; bottom: 11vh; left: 50%; transform: translateX(-50%); width: min(930px, 88vw); text-align: center; z-index: 7; pointer-events: none; text-shadow: 0 3px 20px #000; }
+    #film-title { font-size: clamp(24px, 3.5vw, 43px); font-weight: 400; line-height: 1.4; margin: 0 0 11px; color: #f1ecdf; }
+    #film-subtitle { font-size: clamp(15px, 1.7vw, 20px); line-height: 1.7; color: #aebbd0; margin: 0 auto; max-width: 780px; }
+    .reveal { animation: reveal 1.3s cubic-bezier(.2,.7,.3,1); }
+    @keyframes reveal { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+    #progress-track { position: absolute; bottom: 8vh; left: 0; right: 0; height: 2px; background: #0b1729; z-index: 8; }
+    #progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #73e7c7, #82b8ff, #e5c18b); box-shadow: 0 0 8px #89b2d588; }
+    .axis-label { position: absolute; transform: translate(-50%, -50%); font: 13px/1.5 system-ui, sans-serif; color: #c9d8ee; z-index: 5; pointer-events: none; text-shadow: 0 0 8px #000; }
+    #label-x { color: #ff93a6; } #label-y { color: #85f4cf; } #label-z { color: #9cc6ff; } #label-w { color: #ffd396; }
+    #label-point { font-size: 14px; color: #fff0d3; padding: 3px 8px; background: #03071088; border-radius: 4px; translate: 0 -17px; }
+    .angle-mark { font-size: 11px; color: #efddb9; }
+    #equation { position: absolute; right: 8vw; top: 22vh; font-size: clamp(18px, 2.4vw, 29px); color: #d2c19e; z-index: 6; letter-spacing: 1px; text-shadow: 0 0 18px #000; }
+    #angle-readout { position: absolute; right: 7vw; top: 22vh; z-index: 6; text-align: right; }
+    #angle-label { display: block; color: #a9b9cf; font-size: 14px; margin-bottom: 7px; }
+    #angle-values { font: 18px/1.8 system-ui, sans-serif; color: #e8d1a6; letter-spacing: 1px; }
+    #component-readout { position: absolute; right: 8vw; top: 34vh; z-index: 6; font: 20px/2.3 system-ui, sans-serif; letter-spacing: 2px; }
+    #component-readout span { display: block; transition: opacity .5s; } #component-readout span.locked { opacity: .55; }
+    .screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20; text-align: center; background: radial-gradient(ellipse at 50% 42%, #02050c55 0%, #02050cd9 70%); padding: 32px; }
+    .screen-content { width: min(900px, 100%); }
+    .eyebrow { font: 10px/1.6 system-ui, sans-serif; letter-spacing: 4px; color: #b6a47f; text-transform: uppercase; }
+    #start-screen h1 { font: 200 clamp(35px, 8vw, 89px)/1.1 system-ui, sans-serif; letter-spacing: clamp(4px, 1vw, 13px); margin: 24px 0 21px; }
+    .intro-line { font-size: clamp(18px, 2.4vw, 27px); font-weight: 400; color: #c3c8cf; margin: 0 0 35px; }
+    button { font: 16px 'Tiro Bangla', Georgia, serif; color: #e8ddc8; background: #0a142099; border: 1px solid #8b7b5c; padding: 13px 32px; border-radius: 2px; cursor: pointer; transition: background .4s, border-color .4s; }
+    button:hover { background: #182335; border-color: #e6cd9e; } button:disabled { opacity: .4; cursor: wait; }
+    button:focus-visible, a:focus-visible { outline: 2px solid #f8d7a0; outline-offset: 5px; }
+    #startup-status { color: #7e8ba1; font-size: 13px; line-height: 1.8; margin: 20px auto 0; max-width: 580px; }
     #retry-btn { margin-top: 20px; }
-    #lesson-hud { position: absolute; top: 18px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; z-index: 10; }
-    .brand { font: 500 14px system-ui, sans-serif; letter-spacing: 2px; }
-    #step-count { color: #c7d6eb; font: 13px system-ui, sans-serif; }
-    #lesson-progress { height: 3px; background: #172334; position: absolute; left: 0; right: 0; top: 62px; z-index: 10; }
-    #progress-fill { height: 100%; background: linear-gradient(90deg, #52eaa0, #60a5ff, #ffc75b); width: 0; }
-    .axis-label { position: absolute; z-index: 6; transform: translate(-50%, -50%); background: #030610dd; border: 1px solid #314360; border-radius: 6px; padding: 4px 8px; font-size: 13px; white-space: nowrap; pointer-events: none; }
-    #label-x { color: #ff8b9f; } #label-y { color: #80f6bd; } #label-z { color: #92c4ff; } #label-w { color: #ffc75b; } #label-point { color: #fff; font: 14px system-ui, sans-serif; }
-    #lesson-panel { position: absolute; left: 50%; bottom: 75px; transform: translateX(-50%); width: min(760px, calc(100% - 40px)); padding: 16px 24px; max-height: 215px; overflow-y: auto; border: 1px solid #26364c; border-radius: 16px; background: linear-gradient(120deg, #0d1729f5, #070e1cf5); z-index: 12; }
-    #step-title { margin: 0 0 7px; font-size: 23px; font-weight: 400; color: #eaf2ff; }
-    #subtitle-text { font-size: 17px; line-height: 1.65; color: #dae4f4; margin: 0; }
-    #formula { white-space: pre-line; font-size: 16px; line-height: 1.5; color: #ffe2a1; border-left: 2px solid #b39051; padding: 7px 12px; margin: 10px 0; background: #ffc75b08; }
-    #lesson-note { color: #aabbd3; font-size: 14px; line-height: 1.6; margin: 0; }
-    #angle-readout { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 7; padding: 7px 12px; border: 1px solid #5b4e33; border-radius: 9px; background: #030610ed; white-space: nowrap; }
-    #angle-caption { display: block; color: #aabbd3; font-size: 12px; margin-bottom: 3px; }
-    #angle-values { color: #ffe2a1; font: 14px/1.5 system-ui, sans-serif; white-space: pre; }
-    .scene-callout { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 7; text-align: center; background: #030610e8; padding: 16px; border: 1px solid #3c526d; border-radius: 12px; font-size: clamp(17px, 3vw, 27px); line-height: 1.7; max-width: 90%; }
-    .scene-callout small { display: block; color: #aabbd3; font-size: 14px; }
-    #lesson-controls { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 20; white-space: nowrap; }
-    #pause-btn { min-width: 110px; border-color: #597d9e; }
-    #sound-btn { padding: 7px 10px; font-size: 13px; }
-    #terminal-screen { position: absolute; inset: 75px 20px 75px; max-width: 800px; margin: 0 auto; background: #08111feb; border: 1px solid #3b526e; border-radius: 16px; padding: clamp(18px, 4vw, 38px); z-index: 15; overflow-y: auto; }
-    #terminal-screen h2 { font-size: 28px; font-weight: 400; margin-top: 0; }
-    .term-line { font-size: 18px; line-height: 1.8; color: #c7d7ef; margin: 14px 0; }
-    .term-line strong { color: #80f6bd; font-weight: 400; }
-    .scope-note { padding: 14px; border-left: 2px solid #ffc75b; color: #ffe2a1; background: #ffc75b08; line-height: 1.7; }
-    .sources { margin-top: 18px; color: var(--muted); font-size: 14px; line-height: 1.8; }
-    a { color: #9acaff; } #replay-btn { margin-top: 18px; }
-    body.proof-step { --panel-space: 365px; }
-    body.proof-step #lesson-panel { max-height: 290px; }
+    #end-screen { background: linear-gradient(#02050c66, #02050cdd); }
+    #end-screen h2 { font-weight: 400; font-size: clamp(29px, 4.6vw, 57px); line-height: 1.5; margin: 20px 0 15px; }
+    #end-screen p { color: #aebbd0; font-size: 17px; line-height: 1.8; max-width: 620px; margin: 0 auto 27px; }
+    .references { margin-top: 30px; font-size: 12px; color: #77869d; line-height: 1.9; }
+    .references a { color: #91a3ba; text-decoration: none; margin: 0 8px; } .references a:hover { color: #dfd0b8; }
     @media (max-width: 600px) {
-      :root { --panel-space: 325px; }
-      #lesson-hud { left: 14px; right: 14px; gap: 10px; }
-      .brand { font-size: 11px; letter-spacing: 1px; }
-      #lesson-panel { width: calc(100% - 24px); bottom: 74px; padding: 13px 15px; max-height: 250px; }
-      #step-title { font-size: 21px; } #subtitle-text { font-size: 15px; } #formula { font-size: 14px; } #lesson-note { font-size: 13px; }
-      #lesson-controls { gap: 7px; width: calc(100% - 24px); }
-      #lesson-controls button { flex: 1; padding: 9px 8px; font-size: 14px; } #pause-btn { min-width: 0; }
-      .axis-label { font-size: 11px; padding: 3px 5px; }
-      #angle-values { font-size: 12px; } #angle-readout { top: 6px; padding: 5px 8px; }
-      #terminal-screen { inset: 75px 12px 76px; } .term-line { font-size: 16px; }
+      #cinema-hud { top: 10vh; left: 5vw; right: 5vw; font-size: 8px; letter-spacing: 1px; } .brand { letter-spacing: 1.5px; } #scene-name { max-width: 115px; }
+      #captions { bottom: 12vh; width: 89vw; } #film-title { font-size: 25px; margin-bottom: 10px; } #film-subtitle { font-size: 15px; max-width: 340px; }
+      #equation { top: 15vh; right: auto; left: 50%; transform: translateX(-50%); font-size: 18px; white-space: nowrap; }
+      #angle-readout { top: 14vh; right: auto; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; }
+      #angle-label { font-size: 12px; } #angle-values { font-size: 15px; }
+      #component-readout { top: 29vh; right: 7vw; font-size: 14px; line-height: 2.2; }
+      .axis-label { font-size: 11px; } #label-point { font-size: 12px; } .angle-mark { font-size: 10px; }
+      .screen { padding: 25px; } #start-screen h1 { font-size: 39px; letter-spacing: 4px; } .intro-line { font-size: 20px; } #end-screen p { font-size: 15px; }
     }
-    @media (max-height: 650px) { :root { --panel-space: 250px; } #lesson-panel { max-height: 175px; } }
-    @media (prefers-reduced-motion: reduce) { * { transition-duration: 0s !important; } }
+    @media (max-height: 550px) { #film-title { font-size: 22px; } #film-subtitle { font-size: 13px; } #captions { bottom: 10vh; } #startup-status { margin-top: 12px; } #start-screen h1 { margin: 14px 0; } .intro-line { margin-bottom: 18px; } }
+    @media (prefers-reduced-motion: reduce) { .reveal { animation: none; } button { transition: none; } }
   </style>
 </head>
 <body>
-  <div id="bar-top" class="cinema-bar"></div><div id="bar-bottom" class="cinema-bar"></div>
   <div id="canvas-container">
-    <span class="axis-label" id="label-x" hidden>X · দৈর্ঘ্য</span>
-    <span class="axis-label" id="label-y" hidden>Y · প্রস্থ</span>
-    <span class="axis-label" id="label-z" hidden>Z · উচ্চতা</span>
-    <span class="axis-label" id="label-origin" hidden>O · শুরু</span>
-    <span class="axis-label" id="label-point" hidden>P</span>
-    <span class="axis-label" id="label-w" hidden>W · নতুন দিক?</span>
-    <div id="angle-readout" hidden><span id="angle-caption"></span><span id="angle-values"></span></div>
-    <div id="proof-explanation" class="scene-callout" hidden>W = (a, b, c)<br>↓<br>W = (0, 0, 0)<small>দৈর্ঘ্য ০ · কোনো দিক নেই</small></div>
-    <div id="coordinate-four" class="scene-callout" hidden>(x, y, z, w)<small>৪টি স্বাধীন স্থানাঙ্ক · এটি 3D দৃশ্য</small></div>
+    <span class="axis-label" id="label-x" hidden>X</span><span class="axis-label" id="label-y" hidden>Y</span><span class="axis-label" id="label-z" hidden>Z</span>
+    <span class="axis-label" id="label-point" hidden></span><span class="axis-label" id="label-w" hidden>W</span>
+    <span class="axis-label angle-mark" id="angle-xy" hidden>90°</span><span class="axis-label angle-mark" id="angle-yz" hidden>90°</span><span class="axis-label angle-mark" id="angle-zx" hidden>90°</span>
   </div>
-  <div id="vignette"></div>
-  <div id="start-screen">
-    <span class="eyebrow">A cinematic guided lesson</span>
-    <h1>SPATIAL REALITY</h1>
-    <p class="intro">মাত্রা আসলে কী? বিন্দু থেকে রেখা, সমতল ও ঘনক—তারপর চতুর্থ দিকের প্রশ্ন। ধাপে ধাপে বুঝি।</p>
-    <button id="start-btn" disabled>লোড হচ্ছে…</button>
-    <div id="startup-status" role="status" aria-live="polite">3D দৃশ্য প্রস্তুত হচ্ছে…</div>
-    <button id="retry-btn" hidden>আবার চেষ্টা করো</button>
-  </div>
-  <header id="lesson-hud" hidden><span class="brand">SPATIAL REALITY</span><span id="step-count"></span><button id="sound-btn" aria-pressed="false">সাউন্ড চালু</button></header>
-  <div id="lesson-progress" role="progressbar" aria-label="পাঠের অগ্রগতি" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><div id="progress-fill"></div></div>
-  <section id="lesson-panel" aria-label="ধাপের ব্যাখ্যা" hidden>
-    <h2 id="step-title"></h2><p id="subtitle-text"></p><div id="formula"></div><p id="lesson-note"></p>
+  <div id="vignette"></div><div id="bar-top" class="cinema-bar"></div><div id="bar-bottom" class="cinema-bar"></div>
+  <header id="cinema-hud" hidden><span class="brand">SPATIAL REALITY</span><span id="scene-name"></span><span id="scene-number"></span></header>
+  <div id="equation" hidden></div>
+  <div id="angle-readout" hidden><span id="angle-label"></span><span id="angle-values"></span></div>
+  <div id="component-readout" hidden aria-label="ভেক্টরের তিনটি উপাংশ"><span id="component-a"></span><span id="component-b"></span><span id="component-c"></span></div>
+  <div id="captions" hidden><h2 id="film-title"></h2><p id="film-subtitle"></p></div>
+  <div id="progress-track"><div id="progress-fill"></div></div>
+  <section id="start-screen" class="screen">
+    <div class="screen-content"><span class="eyebrow">A cinematic exploration of dimensions</span><h1>SPATIAL REALITY</h1><p class="intro-line">বিন্দু থেকে মহাবিশ্বের আরও বড় প্রশ্ন।</p>
+    <button id="start-btn" disabled>প্রস্তুত হচ্ছে…</button><div id="startup-status" role="status" aria-live="polite">3D দৃশ্য প্রস্তুত হচ্ছে…</div><button id="retry-btn" hidden>আবার চেষ্টা করো</button></div>
   </section>
-  <nav id="lesson-controls" aria-label="পাঠের নিয়ন্ত্রণ" hidden><button id="prev-btn">← আগের ধাপ</button><button id="pause-btn" aria-pressed="false">বিরতি</button><button id="next-btn">পরের ধাপ →</button></nav>
-  <section id="terminal-screen" hidden aria-label="পাঠের সারাংশ">
-    <span class="eyebrow">Lesson complete</span><h2>এখন কী শিখলাম?</h2>
-    <p class="term-line"><strong>১D → ২D → ৩D:</strong> একটি অবস্থান জানাতে যথাক্রমে এক, দুই বা তিনটি স্বাধীন স্থানাঙ্ক লাগে।</p>
-    <p class="term-line"><strong>এই 3D স্থানে:</strong> X, Y ও Z-এর সঙ্গে একসঙ্গে লম্ব কোনো নতুন অশূন্য ভেক্টর নেই। তিনটি শর্ত দিলে W = (0, 0, 0)।</p>
-    <p class="term-line"><strong>৪D গণিত:</strong> চারটি স্বাধীন স্থানাঙ্ক দিয়ে চার মাত্রার স্থান সংজ্ঞায়িত করা যায়।</p>
-    <p class="term-line"><strong>সময়:</strong> একটি ঘটনা বোঝাতে “কোথায়” ও “কখন”—দুটিই লাগে। আপেক্ষিকতার spacetime-এ তিনটি স্থানিক মাত্রা ও একটি সময়ের মাত্রা থাকে।</p>
-    <p class="scope-note">এটি 3D জ্যামিতির ব্যাখ্যা। বাস্তব মহাবিশ্বে অতিরিক্ত স্থানিক মাত্রা আছে কি না, তার প্রমাণ নয়। গ্র্যাভিটি বা প্রাণের সম্ভাবনা নিয়েও এই অ্যানিমেশন কোনো সিদ্ধান্ত দেয় না।</p>
-    <div class="sources">আরও পড়ো: <a href="https://web.mit.edu/~linalg/webpage/Spring21/Lecture%20notes.pdf" target="_blank" rel="noopener noreferrer">MIT — Linear Algebra</a> · <a href="https://www.einstein-online.info/en/explandict/spacetime/" target="_blank" rel="noopener noreferrer">Einstein Online — Spacetime</a> · <a href="https://www.einstein-online.info/en/spotlight/hiding_extra_dimensions/" target="_blank" rel="noopener noreferrer">Extra dimensions</a></div>
-    <button id="replay-btn">আবার শুরু করো</button>
+  <section id="end-screen" class="screen" hidden aria-label="চলচ্চিত্রের সমাপ্তি">
+    <div class="screen-content"><span class="eyebrow">The frame is not the limit</span><h2>তিনটি দিক। আরও বড় প্রশ্ন।</h2><p>এই 3D স্থানে চতুর্থ স্বাধীন লম্ব দিক নেই।<br>এটি অতিরিক্ত স্থানিক মাত্রার অস্তিত্বের পক্ষে বা বিপক্ষে প্রমাণ নয়।<br>আপেক্ষিকতার spacetime: তিনটি স্থানিক মাত্রা ও সময়।</p><button id="replay-btn">আবার দেখো</button>
+      <div class="references">আরও জানো<br><a href="https://web.mit.edu/~linalg/webpage/Spring21/Lecture%20notes.pdf" target="_blank" rel="noopener noreferrer">জ্যামিতি ও ভেক্টর</a> · <a href="https://www.einstein-online.info/en/explandict/spacetime/" target="_blank" rel="noopener noreferrer">Spacetime</a> · <a href="https://www.einstein-online.info/en/spotlight/hiding_extra_dimensions/" target="_blank" rel="noopener noreferrer">অতিরিক্ত মাত্রা</a></div>
+    </div>
   </section>
   <script>
     (() => {
-      const screen = document.getElementById('start-screen');
-      const button = document.getElementById('start-btn');
-      const status = document.getElementById('startup-status');
-      const retry = document.getElementById('retry-btn');
+      const screen = document.getElementById('start-screen'), button = document.getElementById('start-btn');
+      const status = document.getElementById('startup-status'), retry = document.getElementById('retry-btn');
       let booted = false;
       const watchdog = setTimeout(() => { if (!booted) failed(new Error('The 3D engine took too long to load.')); }, 20000);
       function failed(error) {
-        clearTimeout(watchdog);
-        console.error('Simulation failed:', error);
-        screen.hidden = false;
-        document.getElementById('terminal-screen').hidden = true;
-        button.disabled = true;
-        button.textContent = 'চালু করা যায়নি';
+        clearTimeout(watchdog); console.error('Simulation failed:', error); screen.hidden = false;
+        document.getElementById('end-screen').hidden = true; button.disabled = true; button.textContent = 'চালু করা যায়নি';
         status.textContent = /webgl|graphics/i.test(String(error && error.message))
           ? '3D গ্রাফিক্স চালু হয়নি। ব্রাউজারের হার্ডওয়্যার অ্যাক্সেলারেশন চালু করে বা অন্য ব্রাউজারে চেষ্টা করো।'
           : 'দৃশ্যটি চালু হয়নি। পেজ রিলোড করে আবার চেষ্টা করো।';
-        status.style.color = '#ff9b9b';
-        retry.hidden = false;
+        status.style.color = '#ff9b9b'; retry.hidden = false;
       }
       window.simulationUI = { failed, ready() {
-        booted = true; clearTimeout(watchdog); button.disabled = false;
-        button.textContent = 'শেখা শুরু করো';
-        status.textContent = '১০টি ধাপ · নিজের গতিতে পড়তে বিরতি বা পরের ধাপ চাপতে পারো। হেডফোন ঐচ্ছিক।';
-        retry.hidden = true;
+        booted = true; clearTimeout(watchdog); button.disabled = false; button.textContent = 'চলচ্চিত্র শুরু করো';
+        status.textContent = '২ মিনিট ৫ সেকেন্ড · এরপর পুরোটা স্বয়ংক্রিয় · হেডফোনে ভালো শোনাবে'; retry.hidden = true;
       }};
       retry.addEventListener('click', () => window.location.reload());
       window.addEventListener('error', event => { if (event.error) failed(event.error); });
